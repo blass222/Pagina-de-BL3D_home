@@ -41,9 +41,15 @@ Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea p
 - Al armar un presupuesto (nuevo o desde un pedido), el desplegable **"+ Agregar pieza calculada"** deja elegir una de esas piezas y la agrega como ítem, con su precio ya cargado. Podés elegir varias, una por una, y ajustar la cantidad de cada una si hace falta.
 - Se pueden borrar piezas guardadas con la "×" de cada una.
 
+## Nuevo: Stock de filamento, rentabilidad y clientes frecuentes
+
+- **Stock (pestaña nueva).** Cargá tus bobinas (nombre, gramos totales, gramos restantes, precio y un aviso de "poco stock"). Desde la Calculadora, elegí la bobina que usaste en "Bobina del stock" y tocá **"Registrar impresión"** para descontar los gramos automáticamente. Si registrás una compra con categoría **Filamento** y cargás los gramos comprados, se suman solos a la bobina que elijas (o se crea una bobina nueva si no elegís ninguna).
+- **Piezas más rentables**, en la pestaña Resumen: un ranking de tus piezas guardadas ordenado por ganancia por unidad.
+- **Clientes frecuentes**, en la pestaña Clientes: tocá la estrella ☆ de un cliente para marcarlo como frecuente. Los favoritos aparecen primero en la lista.
+
 ## Notas
 
-- Se sincronizan pedidos, compras, las piezas guardadas, la configuración de la calculadora, los datos de tu negocio y el número de presupuesto.
+- Se sincronizan pedidos, compras, las piezas guardadas, el stock de bobinas, los clientes favoritos, la configuración de la calculadora, los datos de tu negocio y el número de presupuesto.
 - Si cargás el mismo pedido desde dos dispositivos a la vez, gana el último cambio que se guardó.
 - **Cerrar sesión** está abajo de la lista de pedidos. En un dispositivo que no es tuyo, usá una ventana privada.
 - Seguí haciendo copias de seguridad de vez en cuando; ahora también podés restaurarlas y se suben a la nube.

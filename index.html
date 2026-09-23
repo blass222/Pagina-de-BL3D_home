@@ -128,8 +128,24 @@ select.estado[data-e="Finalizado"]{background:var(--st-fin-bg);color:var(--st-fi
 .empty p{margin:0 0 14px}
 /* clients */
 .clients{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.stockgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.spool{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.spool.low{border-color:var(--danger)}
+.spool header{display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px}
+.spool header strong{font-size:16px}
+.spool .g{color:var(--muted);font-size:13px}
+.spool .low-tag{color:var(--danger);font-weight:700;font-size:12px}
+.spoolbar{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden;margin:8px 0}
+.spoolbar i{display:block;height:100%;background:var(--accent)}
+.spool.low .spoolbar i{background:var(--danger)}
+.spool .acts{display:flex;gap:6px;margin-top:10px}
+.spool .acts .btn{flex:1}
 .client{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.client.fav{border-color:#E0A526}
 .client header{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+.client header>div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.star{border:0;background:transparent;cursor:pointer;font-size:19px;line-height:1;color:#C99A1E;padding:0;flex:none}
+.star[aria-pressed="false"]{color:var(--muted)}
 .client header strong{font-size:17px;display:block}
 .client .tot{text-align:right;font-weight:700;font-family:var(--head);font-size:18px}
 .client .tot small{display:block;font:400 12px var(--body);color:var(--muted)}
@@ -215,6 +231,12 @@ select.estado[data-e="Entregado"]{background:var(--surface2);color:var(--muted);
 .catrow .amt{text-align:right;font-weight:600}
 .catbar{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
 .catbar i{display:block;height:100%;background:var(--c4)}
+.pzrank{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pzrank:last-child{border-bottom:0}
+.pzrank .medal{width:22px;text-align:center;font-weight:700;color:var(--muted);flex:none}
+.pzrank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pzrank .g{text-align:right;font-weight:700;color:var(--st-fin-fg);white-space:nowrap}
+.pzrank .g small{display:block;font-weight:400;color:var(--muted);font-size:12px}
 @media (max-width:560px){.catrow{grid-template-columns:100px 1fr 84px}.catrow .pct{display:none}}
 .tblwrap{overflow-x:auto}
 table.mt{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
@@ -254,6 +276,7 @@ p.sync.off::before{background:var(--danger)}
       <button role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
       <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
       <button role="tab" data-tab="compras" aria-selected="false">Compras</button>
+      <button role="tab" data-tab="stock" aria-selected="false">Stock</button>
       <button role="tab" data-tab="resumen" aria-selected="false">Resumen</button>
       <button role="tab" data-tab="calc" aria-selected="false">Calculadora</button>
     </nav>
@@ -298,6 +321,16 @@ p.sync.off::before{background:var(--danger)}
     <p class="hint" style="margin-top:12px">Cada compra que registres se suma automáticamente a los egresos del mes en la pestaña Resumen.</p>
   </section>
 
+  <!-- STOCK -->
+  <section id="tab-stock" hidden>
+    <div class="toolbar">
+      <button class="btn primary" id="btnNuevaBobina">Agregar bobina</button>
+    </div>
+    <div class="totals" id="stTotals"></div>
+    <div class="stockgrid" id="stockList"></div>
+    <p class="hint" style="margin-top:12px">Cuando registrás una impresión desde la Calculadora eligiendo una bobina, el stock se descuenta solo.</p>
+  </section>
+
   <!-- RESUMEN -->
   <section id="tab-resumen" hidden>
     <div class="stat-head">
@@ -316,6 +349,11 @@ p.sync.off::before{background:var(--danger)}
     <div class="panel">
       <h3 id="sCatTitle">Compras por categoría</h3>
       <div id="sCats"></div>
+    </div>
+    <div class="panel">
+      <h3>Piezas más rentables</h3>
+      <p class="hint" style="margin-top:-4px">Según lo que guardaste desde la Calculadora, ordenadas por ganancia por unidad.</p>
+      <div id="sPiezas"></div>
     </div>
     <div class="panel">
       <h3>Detalle por mes</h3>
@@ -341,6 +379,11 @@ p.sync.off::before{background:var(--danger)}
             <div><label for="c_precioRollo">Precio del rollo ($)</label><input type="number" id="c_precioRollo" min="0" step="any" inputmode="decimal"></div>
             <div><label for="c_pesoRollo">Peso del rollo (g)</label><input type="number" id="c_pesoRollo" min="1" step="any" inputmode="decimal"></div>
             <div class="full"><label for="c_gramos">Filamento usado en la impresión (g)</label><input type="number" id="c_gramos" min="0" step="any" inputmode="decimal"></div>
+            <div class="full"><label for="c_bobina">Bobina del stock (opcional)</label>
+              <div class="unit"><select id="c_bobina" style="flex:1"><option value="">Sin descontar del stock</option></select>
+              <button class="btn small" id="btnDescontarStock" type="button">Registrar impresión</button></div>
+              <p class="hint" style="margin-top:4px">Elegí una bobina y tocá el botón cuando imprimas de verdad, para descontar los gramos del stock.</p>
+            </div>
           </div>
         </div>
         <div class="panel">
@@ -430,6 +473,37 @@ p.sync.off::before{background:var(--danger)}
   </div>
 </dialog>
 
+<dialog id="dlgB">
+  <div class="dlg">
+    <h2 id="dlgBTitle">Agregar bobina</h2>
+    <div><label for="b_nombre_bob">Nombre (material y color)</label><input type="text" id="b_nombre_bob" placeholder="Ej: PLA Negro" autocomplete="off"></div>
+    <div class="grid2">
+      <div><label for="b_total">Gramos del rollo</label><input type="number" id="b_total" min="1" step="any" inputmode="decimal"></div>
+      <div><label for="b_restante">Gramos restantes</label><input type="number" id="b_restante" min="0" step="any" inputmode="decimal"></div>
+    </div>
+    <div class="grid2">
+      <div><label for="b_precio">Precio pagado ($)</label><input type="number" id="b_precio" min="0" step="any" inputmode="decimal"></div>
+      <div><label for="b_umbral">Avisar cuando queden menos de (g)</label><input type="number" id="b_umbral" min="0" step="any" inputmode="decimal"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="bCancel">Cancelar</button>
+      <button class="btn primary" id="bSave">Guardar bobina</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgB2">
+  <div class="dlg">
+    <h2>Sumar gramos</h2>
+    <p class="hint" id="b2_label"></p>
+    <div><label for="b2_gramos">Gramos que agregás</label><input type="number" id="b2_gramos" min="1" step="any" inputmode="decimal"></div>
+    <div class="actions">
+      <button class="btn" id="b2Cancel">Cancelar</button>
+      <button class="btn primary" id="b2Save">Sumar al stock</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="dlgC">
   <div class="dlg">
     <h2 id="dlgCTitle">Registrar compra</h2>
@@ -439,6 +513,10 @@ p.sync.off::before{background:var(--danger)}
     </div>
     <div><label for="g_detalle">Detalle o proveedor</label><input type="text" id="g_detalle" placeholder="Ej: 2 rollos PLA negro, pegamento, boquillas…" autocomplete="off"></div>
     <div><label for="g_cat">Categoría</label><select id="g_cat"></select></div>
+    <div class="grid2" id="g_stockRow" hidden>
+      <div><label for="g_gramos">Gramos comprados</label><input type="number" id="g_gramos" min="0" step="any" inputmode="decimal"></div>
+      <div><label for="g_bobina">Sumar a la bobina</label><select id="g_bobina"><option value="">Es una bobina nueva</option></select></div>
+    </div>
     <div class="actions">
       <button class="btn" id="gCancel">Cancelar</button>
       <button class="btn primary" id="gSave">Guardar compra</button>
@@ -546,10 +624,11 @@ function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeo
 
 /* ---------- pestañas ---------- */
 function setTab(name){
-  ['pedidos','clientes','compras','resumen','calc'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
+  ['pedidos','clientes','compras','stock','resumen','calc'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
   document.querySelectorAll('nav.tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.tab===name))});
   if(name==='clientes') renderClients();
   if(name==='compras') renderCompras();
+  if(name==='stock') renderStock();
   if(name==='resumen') renderResumen();
 }
 document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab)})});
@@ -722,6 +801,9 @@ $('dlgSave').addEventListener('click',function(){
 });
 
 /* ---------- clientes ---------- */
+var K_CLIENTES='taller3d:clientesinfo';
+var clientesInfo=lsGet(K_CLIENTES); if(!clientesInfo||typeof clientesInfo!=='object') clientesInfo={};
+function saveClientesInfo(){ lsSet(K_CLIENTES,clientesInfo); pushClientesInfo(); }
 function renderClients(){
   var box=$('clients'), map={}, keys=[];
   orders.forEach(function(o){
@@ -731,18 +813,30 @@ function renderClients(){
     if(!map[k].tel&&o.tel) map[k].tel=o.tel;
   });
   if(!keys.length){box.innerHTML='<div class="empty" style="grid-column:1/-1"><p>Cuando cargues pedidos, acá vas a ver cada cliente con todo lo que te pidió.</p></div>';return}
-  keys.sort(function(a,b){return map[b].list.length-map[a].list.length});
+  keys.sort(function(a,b){
+    var fa=clientesInfo[a]&&clientesInfo[a].favorito?1:0, fb=clientesInfo[b]&&clientesInfo[b].favorito?1:0;
+    if(fa!==fb) return fb-fa;
+    return map[b].list.length-map[a].list.length;
+  });
   box.innerHTML=keys.map(function(k){
     var g=map[k], tot=g.list.reduce(function(s,o){return s+num(o.precio)},0), d=digits(g.tel);
+    var fav=!!(clientesInfo[k]&&clientesInfo[k].favorito);
     var tel=g.tel?(d.length>=8?'<a href="https://wa.me/'+d+'" target="_blank" rel="noopener" style="color:var(--muted);font-size:14px">'+esc(g.tel)+'</a>':'<span style="color:var(--muted);font-size:14px">'+esc(g.tel)+'</span>'):'';
     var items=sorted(g.list).map(function(o){
       return '<li data-id="'+o.id+'"><span class="d">'+esc(o.desc||'Sin descripción')+'</span><span class="pill" data-e="'+o.estado+'">'+o.estado+'</span><b>'+$$(o.precio)+'</b></li>';
     }).join('');
-    return '<div class="client"><header><div><strong>'+esc(g.nombre||'Sin nombre')+'</strong>'+tel+'</div>'+
+    return '<div class="client'+(fav?' fav':'')+'"><header><div><button class="star" data-fav="'+esc(k)+'" aria-pressed="'+fav+'" aria-label="Marcar como cliente frecuente" title="Marcar como cliente frecuente">'+(fav?'★':'☆')+'</button><strong>'+esc(g.nombre||'Sin nombre')+'</strong>'+tel+'</div>'+
       '<div class="tot">'+$$(tot)+'<small>'+g.list.length+(g.list.length===1?' pedido':' pedidos')+'</small></div></header><ul>'+items+'</ul><button class="btn small" style="margin-top:10px" data-ppto-client="'+esc(k)+'">Presupuesto de sus pedidos</button></div>';
   }).join('');
 }
 $('clients').addEventListener('click',function(e){
+  var star=e.target.closest('[data-fav]');
+  if(star){
+    var k=star.dataset.fav;
+    clientesInfo[k]=clientesInfo[k]||{};
+    clientesInfo[k].favorito=!clientesInfo[k].favorito;
+    saveClientesInfo();renderClients();return;
+  }
   var li=e.target.closest('li[data-id]'); if(li) openDialog(li.dataset.id);
 });
 
@@ -796,7 +890,7 @@ function calcUpdate(){
   var precio=c.redondeo>0&&precioBruto>0?Math.ceil(precioBruto/c.redondeo)*c.redondeo:precioBruto;
   var gan=precio-costo;
   var qty=Math.max(1,Math.floor(c.qty)||1);
-  last={precio:precio,costoMat:fil+ins,min:Math.round(horas*60),qty:qty};
+  last={precio:precio,costo:costo,gan:gan,costoMat:fil+ins,min:Math.round(horas*60),qty:qty};
   $('r_pieza').textContent=$$(precio/qty);
   $('r_titulo').textContent=qty>1?'Precio por pieza ('+qty+' piezas)':'Precio de la pieza';
   $('r_total').textContent=qty>1?'Total de la impresión: '+$$(precio):'';
@@ -855,7 +949,7 @@ $('pzList').addEventListener('click',function(e){
 $('btnGuardarPieza').addEventListener('click',function(){
   if(!last||last.precio<=0){toast('Completá los datos de la pieza primero');return}
   var nombre=(c.nombre||'').trim()||'Pieza sin nombre';
-  piezas.push({id:uid(),nombre:nombre,precioUnit:Math.round(last.precio/last.qty),qty:last.qty,min:last.min,fecha:today()});
+  piezas.push({id:uid(),nombre:nombre,precioUnit:Math.round(last.precio/last.qty),costoUnit:Math.round(last.costo/last.qty),ganUnit:Math.round(last.gan/last.qty),qty:last.qty,min:last.min,fecha:today()});
   savePiezas();renderPiezas();fillPiezaPicker();
   toast('Pieza guardada. Elegila con un toque al armar un presupuesto.');
 });
@@ -897,7 +991,7 @@ $('btnCsvC').addEventListener('click',function(){
   saveFile('compras-3d.csv','\uFEFF'+rows.map(function(r){return r.map(q).join(';')}).join('\r\n'));
 });
 $('btnBackup').addEventListener('click',function(){
-  saveFile('copia-taller-3d.json',JSON.stringify({version:3,pedidos:orders,compras:compras,piezas:piezas,calculadora:c},null,2));
+  saveFile('copia-taller-3d.json',JSON.stringify({version:4,pedidos:orders,compras:compras,piezas:piezas,stock:bobinas,clientesInfo:clientesInfo,calculadora:c},null,2));
 });
 $('btnRestore').addEventListener('click',function(){$('fileRestore').click()});
 $('fileRestore').addEventListener('change',function(){
@@ -932,15 +1026,30 @@ $('fileRestore').addEventListener('change',function(){
       if(!Array.isArray(j)&&Array.isArray(j.piezas)){
         j.piezas.forEach(function(pz){
           if(!pz||typeof pz!=='object') return;
-          var rp={id:String(pz.id||uid()),nombre:String(pz.nombre||'Pieza'),precioUnit:num(pz.precioUnit),qty:Math.max(1,Math.floor(num(pz.qty))||1),min:num(pz.min),fecha:String(pz.fecha||today())};
+          var rp={id:String(pz.id||uid()),nombre:String(pz.nombre||'Pieza'),precioUnit:num(pz.precioUnit),costoUnit:num(pz.costoUnit),ganUnit:num(pz.ganUnit),qty:Math.max(1,Math.floor(num(pz.qty))||1),min:num(pz.min),fecha:String(pz.fecha||today())};
           var pIdx=piezas.findIndex(function(x){return x.id===rp.id});
           if(pIdx>-1) piezas[pIdx]=rp; else piezas.push(rp);
           np++;
         });
         savePiezas();renderPiezas();fillPiezaPicker();
       }
+      var nb=0;
+      if(!Array.isArray(j)&&Array.isArray(j.stock)){
+        j.stock.forEach(function(b){
+          if(!b||typeof b!=='object') return;
+          var rb={id:String(b.id||uid()),nombre:String(b.nombre||'Bobina'),total:num(b.total),restante:num(b.restante),precio:num(b.precio),umbral:num(b.umbral),fecha:String(b.fecha||today())};
+          var bIdx=bobinas.findIndex(function(x){return x.id===rb.id});
+          if(bIdx>-1) bobinas[bIdx]=rb; else bobinas.push(rb);
+          nb++;
+        });
+        saveBobinas();renderStock();fillBobinaPicker();
+      }
+      if(!Array.isArray(j)&&j.clientesInfo&&typeof j.clientesInfo==='object'){
+        Object.keys(j.clientesInfo).forEach(function(k){clientesInfo[k]=j.clientesInfo[k]});
+        saveClientesInfo();
+      }
       saveOrders();renderOrders();renderClients();renderCompras();renderResumen();
-      toast('Se restauraron '+n+' pedidos'+(nc?' y '+nc+' compras':'')+(np?' y '+np+' piezas':''));
+      toast('Se restauraron '+n+' pedidos'+(nc?' y '+nc+' compras':'')+(np?' y '+np+' piezas':'')+(nb?' y '+nb+' bobinas':''));
     }catch(e){toast('El archivo no es una copia válida')}
   };
   r.readAsText(f); this.value='';
@@ -1158,6 +1267,7 @@ function shiftMonth(k,n){
 }
 var cMes='todos', editingC=null;
 $('g_cat').innerHTML=CATS.map(function(x){return '<option>'+x+'</option>'}).join('');
+$('g_cat').addEventListener('change',function(){$('g_stockRow').hidden=(this.value!=='Filamento')});
 
 function renderCompras(){
   var set={}; set[today().slice(0,7)]=1;
@@ -1190,6 +1300,9 @@ function openCompra(id){
   $('g_monto').value=g?g.monto:'';
   $('g_detalle').value=g?g.detalle:'';
   $('g_cat').value=g?g.cat:CATS[0];
+  $('g_gramos').value='';
+  $('g_stockRow').hidden=($('g_cat').value!=='Filamento');
+  fillBobinaPicker();
   $('dlgC').showModal();
   $('g_monto').focus();
 }
@@ -1200,8 +1313,22 @@ $('gSave').addEventListener('click',function(){
   if(monto<=0){toast('Ingresá el monto de la compra');$('g_monto').focus();return}
   var rec={id:editingC||uid(),fecha:$('g_fecha').value||today(),monto:monto,detalle:$('g_detalle').value.trim(),cat:$('g_cat').value};
   if(editingC){compras=compras.map(function(g){return g.id===editingC?rec:g})}else{compras.push(rec)}
-  saveCompras();$('dlgC').close();renderCompras();renderResumen();
-  toast(editingC?'Compra actualizada':'Compra registrada');
+  saveCompras();
+  var gramosComprados=num($('g_gramos').value);
+  if(!editingC&&rec.cat==='Filamento'&&gramosComprados>0){
+    var bid=$('g_bobina').value, bob=bid?bobinas.find(function(x){return x.id===bid}):null;
+    if(bob){
+      bob.total+=gramosComprados; bob.restante+=gramosComprados;
+      toast('Compra registrada y se sumaron '+gramosComprados+' g a "'+bob.nombre+'"');
+    } else {
+      bobinas.push({id:uid(),nombre:rec.detalle||'Bobina nueva',total:gramosComprados,restante:gramosComprados,precio:monto,umbral:100,fecha:today()});
+      toast('Compra registrada y se creó la bobina "'+(rec.detalle||'Bobina nueva')+'"');
+    }
+    saveBobinas();renderStock();fillBobinaPicker();
+  } else {
+    toast(editingC?'Compra actualizada':'Compra registrada');
+  }
+  $('dlgC').close();renderCompras();renderResumen();
 });
 var armedC=null;
 $('cList').addEventListener('click',function(e){
@@ -1220,6 +1347,99 @@ $('cList').addEventListener('click',function(e){
       setTimeout(function(){if(armedC===a){a.textContent='Borrar';a.classList.remove('armed');armedC=null}},3000);
     }
   }
+});
+
+/* ---------- stock de filamento ---------- */
+var K_STOCK='taller3d:stock';
+var bobinas=lsGet(K_STOCK); if(!Array.isArray(bobinas)) bobinas=[];
+function saveBobinas(){ if(!lsSet(K_STOCK,bobinas)) toast('No se pudo guardar en este navegador. Hacé una copia de seguridad.'); pushBobinas(); }
+function bajoStock(b){return num(b.restante)<=num(b.umbral)}
+function fillBobinaPicker(){
+  ['c_bobina','g_bobina'].forEach(function(id){
+    var sel=$(id); if(!sel) return;
+    var ph=id==='c_bobina'?'Sin descontar del stock':'Es una bobina nueva';
+    var keep=sel.value;
+    sel.innerHTML='<option value="">'+ph+'</option>'+bobinas.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre,'es')}).map(function(b){
+      return '<option value="'+b.id+'">'+esc(b.nombre)+' · '+Math.round(b.restante)+' g'+(bajoStock(b)?' (bajo)':'')+'</option>';
+    }).join('');
+    if(bobinas.some(function(b){return b.id===keep})) sel.value=keep;
+  });
+}
+function renderStock(){
+  var box=$('stockList'), low=bobinas.filter(bajoStock).length;
+  var valor=bobinas.reduce(function(s,b){return s+(num(b.total)>0?num(b.precio)/num(b.total)*num(b.restante):0)},0);
+  $('stTotals').innerHTML='<div class="total"><span>Bobinas</span><strong>'+bobinas.length+'</strong></div>'+
+    '<div class="total"><span>Con poco stock</span><strong class="'+(low?'neg':'')+'">'+low+'</strong></div>'+
+    '<div class="total"><span>Valor del stock restante</span><strong>'+$$(valor)+'</strong></div>';
+  if(!bobinas.length){ box.innerHTML='<div class="empty" style="grid-column:1/-1"><p>Todavía no cargaste ninguna bobina.</p><button class="btn primary" data-bact="new">Agregar la primera</button></div>'; return; }
+  box.innerHTML=bobinas.slice().sort(function(a,b){return bajoStock(b)-bajoStock(a)||a.nombre.localeCompare(b.nombre,'es')}).map(function(b){
+    var pc=num(b.total)>0?Math.max(0,Math.min(100,num(b.restante)/num(b.total)*100)):0, low=bajoStock(b);
+    return '<div class="spool'+(low?' low':'')+'" data-id="'+b.id+'"><header><strong>'+esc(b.nombre)+'</strong>'+(low?'<span class="low-tag">Poco stock</span>':'')+'</header>'+
+      '<div class="g">'+Math.round(b.restante)+' g de '+Math.round(b.total)+' g</div>'+
+      '<div class="spoolbar"><i style="width:'+pc+'%"></i></div>'+
+      '<div class="acts"><button class="btn small" data-bact="add">+ Gramos</button><button class="btn small" data-bact="edit">Editar</button><button class="btn small danger" data-bact="del">Borrar</button></div></div>';
+  }).join('');
+}
+var editingB=null;
+function openBobina(id){
+  editingB=id||null;
+  var b=id?bobinas.find(function(x){return x.id===id}):null;
+  $('dlgBTitle').textContent=b?'Editar bobina':'Agregar bobina';
+  $('b_nombre_bob').value=b?b.nombre:'';
+  $('b_total').value=b?b.total:'';
+  $('b_restante').value=b?b.restante:(b_totalVal());
+  $('b_precio').value=b?b.precio:'';
+  $('b_umbral').value=b?b.umbral:100;
+  $('dlgB').showModal();
+  $('b_nombre_bob').focus();
+}
+function b_totalVal(){return $('b_total').value||''}
+$('b_total').addEventListener('input',function(){ if(!editingB&&!$('b_restante').value) $('b_restante').value=this.value; });
+$('btnNuevaBobina').addEventListener('click',function(){openBobina()});
+$('bCancel').addEventListener('click',function(){$('dlgB').close()});
+$('bSave').addEventListener('click',function(){
+  var nombre=$('b_nombre_bob').value.trim();
+  if(!nombre){toast('Ponele un nombre a la bobina');$('b_nombre_bob').focus();return}
+  var total=Math.max(0,num($('b_total').value));
+  var rec={id:editingB||uid(),nombre:nombre,total:total,restante:Math.max(0,Math.min(total||1e9,num($('b_restante').value))),precio:num($('b_precio').value),umbral:Math.max(0,num($('b_umbral').value)),fecha:editingB?(bobinas.find(function(x){return x.id===editingB})||{}).fecha||today():today()};
+  if(editingB){bobinas=bobinas.map(function(b){return b.id===editingB?rec:b})}else{bobinas.push(rec)}
+  saveBobinas();$('dlgB').close();renderStock();fillBobinaPicker();
+  toast(editingB?'Bobina actualizada':'Bobina agregada');
+});
+var pendingAddId=null;
+$('b2Cancel').addEventListener('click',function(){$('dlgB2').close()});
+$('b2Save').addEventListener('click',function(){
+  var g=num($('b2_gramos').value); if(g<=0){toast('Ingresá los gramos que sumás');return}
+  var b=bobinas.find(function(x){return x.id===pendingAddId}); if(!b) return;
+  b.total+=g; b.restante+=g; saveBobinas();renderStock();fillBobinaPicker();$('dlgB2').close();
+  toast('Se sumaron '+g+' g a "'+b.nombre+'"');
+});
+var armedB=null;
+$('stockList').addEventListener('click',function(e){
+  var a=e.target.closest('[data-bact]'); if(!a) return;
+  if(a.dataset.bact==='new'){openBobina();return}
+  var card=e.target.closest('.spool'); if(!card) return;
+  var id=card.dataset.id, b=bobinas.find(function(x){return x.id===id});
+  if(a.dataset.bact==='edit') openBobina(id);
+  if(a.dataset.bact==='add'){ pendingAddId=id; $('b2_label').textContent=b?('Bobina: '+b.nombre):''; $('b2_gramos').value=''; $('dlgB2').showModal(); $('b2_gramos').focus(); }
+  if(a.dataset.bact==='del'){
+    if(armedB===a){
+      bobinas=bobinas.filter(function(x){return x.id!==id});
+      saveBobinas();renderStock();fillBobinaPicker();toast('Bobina borrada');
+    } else {
+      if(armedB){armedB.textContent='Borrar';armedB.classList.remove('armed')}
+      armedB=a;a.textContent='¿Seguro?';a.classList.add('armed');
+      setTimeout(function(){if(armedB===a){a.textContent='Borrar';a.classList.remove('armed');armedB=null}},3000);
+    }
+  }
+});
+$('btnDescontarStock').addEventListener('click',function(){
+  var id=$('c_bobina').value; if(!id){toast('Elegí una bobina primero');return}
+  var b=bobinas.find(function(x){return x.id===id}); if(!b) return;
+  var g=num(c.gramos); if(g<=0){toast('Cargá los gramos que usaste en Filamento');return}
+  b.restante=Math.max(0,b.restante-g);
+  saveBobinas();renderStock();fillBobinaPicker();
+  toast(bajoStock(b)?'Impresión registrada. Queda poco stock de "'+b.nombre+'"':'Impresión registrada, se descontaron '+g+' g de "'+b.nombre+'"');
 });
 
 /* ---------- resumen mensual ---------- */
@@ -1292,6 +1512,18 @@ function renderResumen(){
     return '<tr data-m="'+k+'"'+(k===sMes?' class="sel"':'')+'><td>'+mlabel(k)+'</td><td>'+$$(d.ventas)+'</td><td>'+$$(d.compras)+'</td><td class="'+(r>=0?'pos':'neg')+'">'+$$(r)+'</td></tr>';
   }).join('');
   $('sTable').innerHTML='<table class="mt"><thead><tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Resultado</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td>Total 12 meses</td><td>'+$$(tv)+'</td><td>'+$$(tc)+'</td><td class="'+(tv-tc>=0?'pos':'neg')+'">'+$$(tv-tc)+'</td></tr></tfoot></table>';
+
+  // ranking de piezas por ganancia
+  var rank=piezas.filter(function(pz){return pz.costoUnit>0||pz.ganUnit>0}).slice().sort(function(a,b){return b.ganUnit-a.ganUnit}).slice(0,8);
+  if(!rank.length){
+    $('sPiezas').innerHTML='<p class="hint">Todavía no hay piezas guardadas con datos de costo. Calculá y guardá alguna en la pestaña Calculadora.</p>';
+  } else {
+    var medals=['🥇','🥈','🥉'];
+    $('sPiezas').innerHTML=rank.map(function(pz,i){
+      var pct=pz.precioUnit>0?Math.round(pz.ganUnit/pz.precioUnit*100):0;
+      return '<div class="pzrank"><span class="medal">'+(medals[i]||(i+1))+'</span><span class="nm">'+esc(pz.nombre)+'</span><span class="g">'+$$(pz.ganUnit)+'<small>'+pct+'% de margen</small></span></div>';
+    }).join('');
+  }
 }
 $('tab-resumen').addEventListener('click',function(e){
   var sh=e.target.closest('[data-shift]');
@@ -1346,6 +1578,8 @@ function pushCalc(){ if(!fbUser) return; clearTimeout(calcT); calcT=setTimeout(p
 function pushBiz(){ if(fbUser) cfgDoc('negocio').set({nombre:biz.nombre||'',contacto:biz.contacto||''}).catch(syncErr) }
 function pushNum(n){ if(fbUser) cfgDoc('presupuesto').set({next:n}).catch(syncErr) }
 function pushPiezas(){ if(fbUser) cfgDoc('piezas').set({items:JSON.parse(JSON.stringify(piezas))}).catch(syncErr) }
+function pushBobinas(){ if(fbUser) cfgDoc('stock').set({items:JSON.parse(JSON.stringify(bobinas))}).catch(syncErr) }
+function pushClientesInfo(){ if(fbUser) cfgDoc('clientesinfo').set(JSON.parse(JSON.stringify(clientesInfo))).catch(syncErr) }
 
 function listenName(name){
   var C=COL[name];
@@ -1395,6 +1629,18 @@ function listenCfg(){
     if(!snap.exists){ if(!snap.metadata.fromCache&&piezas.length) pushPiezas(); return }
     var d=snap.data(); piezas=Array.isArray(d.items)?d.items:[];
     lsSet(K_PIEZAS,piezas); renderPiezas(); fillPiezaPicker();
+  },syncErr));
+  u.push(cfgDoc('stock').onSnapshot(function(snap){
+    if(snap.metadata.hasPendingWrites) return;
+    if(!snap.exists){ if(!snap.metadata.fromCache&&bobinas.length) pushBobinas(); return }
+    var d=snap.data(); bobinas=Array.isArray(d.items)?d.items:[];
+    lsSet(K_STOCK,bobinas); renderStock(); fillBobinaPicker();
+  },syncErr));
+  u.push(cfgDoc('clientesinfo').onSnapshot(function(snap){
+    if(snap.metadata.hasPendingWrites) return;
+    if(!snap.exists){ if(!snap.metadata.fromCache&&Object.keys(clientesInfo).length) pushClientesInfo(); return }
+    var d=snap.data(); clientesInfo=d&&typeof d==='object'?d:{};
+    lsSet(K_CLIENTES,clientesInfo); renderClients();
   },syncErr));
   return u;
 }
@@ -1467,7 +1713,7 @@ function initSync(){
 
 /* ---------- inicio ---------- */
 initSync();
-bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();
+bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();renderStock();fillBobinaPicker();
 var deferredInstall=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;$('btnInstall').hidden=false});
 $('btnInstall').addEventListener('click',function(){

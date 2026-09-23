@@ -1,5 +1,5 @@
 // Service worker de BL3D: permite usar la app sin conexión.
-const VERSION = 'bl3d-v3';
+const VERSION = 'bl3d-v4';
 const CORE = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 const EXTERNAL = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
 // Solo se guardan en caché librerías y fuentes. El tráfico de Firebase nunca pasa por acá.
