@@ -108,6 +108,18 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bot
 .o-meta dd{margin:0;font-weight:600}
 .o-meta small{display:block;font-weight:400;color:var(--muted);font-size:12px}
 .o-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:150px}
+.tagpick{display:flex;flex-wrap:wrap;gap:8px}
+.tagchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+.tagchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fotopick{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.fotopick img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.fotopick-btns{display:flex;gap:8px;flex-wrap:wrap}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{display:inline-block;background:var(--surface2);color:var(--muted);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.tag.urgente{background:#FDE2E1;color:#9A2A25}
+:root[data-theme="dark"] .tag.urgente,html:not([data-theme="light"]) .tag.urgente{background:#5A2422;color:#F7B4AF}
+.o-thumb{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer;flex:none}
+.o-client{display:flex;gap:10px;align-items:flex-start}
 .o-actions .row{display:flex;gap:6px}
 .o-actions .row .btn{flex:1}
 select.estado{font-weight:600;border-color:transparent;padding-right:8px}
@@ -421,6 +433,7 @@ p.sync.off::before{background:var(--danger)}
         <div class="big-l" id="r_total"></div>
         <div class="bar" id="r_bar" role="img" aria-label="Distribución del precio"></div>
         <ul class="legend" id="r_legend"></ul>
+        <p class="hint" id="r_warnLow" hidden style="color:var(--danger);font-weight:600"></p>
         <div class="res-actions">
           <button class="btn primary" id="btnAPedido">Pasar a un pedido</button>
           <button class="btn" id="btnGuardarPieza">Guardar pieza</button>
@@ -448,6 +461,21 @@ p.sync.off::before{background:var(--danger)}
     <datalist id="dlNombres"></datalist>
     <p class="hint">Para abrir WhatsApp con un toque, cargá el número con código de país (54 9 y el número sin 0 ni 15).</p>
     <div><label for="f_desc">Descripción del pedido</label><textarea id="f_desc" placeholder="Qué hay que imprimir, color, medidas, cantidad…"></textarea></div>
+    <div>
+      <label>Etiquetas</label>
+      <div class="tagpick" id="f_tagpick"></div>
+    </div>
+    <div>
+      <label>Foto de la pieza terminada</label>
+      <div class="fotopick">
+        <img id="f_fotoPrev" alt="" hidden>
+        <div class="fotopick-btns">
+          <input type="file" id="f_fotoInput" accept="image/*" hidden>
+          <button class="btn small" type="button" id="f_fotoBtn">Elegir foto</button>
+          <button class="btn small danger" type="button" id="f_fotoDel" hidden>Quitar foto</button>
+        </div>
+      </div>
+    </div>
     <div class="grid2">
       <div><label for="f_fecha">Fecha del pedido</label><input type="date" id="f_fecha"></div>
       <div><label for="f_estado">Estado</label><select id="f_estado"></select></div>
@@ -470,6 +498,13 @@ p.sync.off::before{background:var(--danger)}
       <button class="btn" id="dlgCancel">Cancelar</button>
       <button class="btn primary" id="dlgSave">Guardar pedido</button>
     </div>
+  </div>
+</dialog>
+
+<dialog id="dlgFoto">
+  <div class="dlg" style="padding:0">
+    <img id="fotoFull" alt="Foto de la pieza" style="width:100%;display:block;border-radius:16px 16px 0 0">
+    <div class="actions" style="padding:14px"><button class="btn primary" id="fotoClose">Cerrar</button></div>
   </div>
 </dialog>
 
@@ -672,16 +707,34 @@ function renderTotals(list){
     '<div class="total"><span>Diferencia</span><strong>'+$$(f-m)+'</strong></div>'+
     '<div class="total"><span>Por cobrar</span><strong>'+$$(sp)+'</strong></div>';
 }
+function wspMsg(o){
+  var nombre=(o.nombre||'').trim().split(' ')[0]||'';
+  var quien=nombre?' '+nombre:'';
+  var desc=o.desc||'tu pedido';
+  var sd=saldo(o);
+  if(o.estado==='En preparación') return 'Hola'+quien+'! Te confirmo que ya tomé tu pedido: '+desc+'. Te aviso apenas lo empecemos a imprimir. 🙌';
+  if(o.estado==='Iniciado') return 'Hola'+quien+'! Ya empezamos a imprimir tu pedido: '+desc+'. Te aviso en cuanto esté listo.';
+  if(o.estado==='Finalizado') return 'Hola'+quien+'! Tu pedido ya está listo: '+desc+'.'+(sd>0?' Queda un saldo de '+$$(sd)+' a coordinar.':'')+' ¿Cuándo te queda cómodo pasar a buscarlo?';
+  return 'Hola'+quien+'! Gracias por tu compra 🙌';
+}
+function tagsHTML(o){
+  if(!o.tags||!o.tags.length) return '';
+  return '<div class="tags">'+o.tags.map(function(t){
+    return '<span class="tag'+(normName(t)==='urgente'?' urgente':'')+'">'+esc(t)+'</span>';
+  }).join('')+'</div>';
+}
 function orderHTML(o){
   var d=digits(o.tel);
   var tel=o.tel?(d.length>=8?'<a href="https://wa.me/'+d+'" target="_blank" rel="noopener" title="Abrir WhatsApp">'+esc(o.tel)+'</a>':'<span>'+esc(o.tel)+'</span>'):'<span>Sin teléfono</span>';
   var gan=num(o.precio)-num(o.costo);
   var opts=ESTADOS.map(function(e){return '<option'+(e===o.estado?' selected':'')+'>'+e+'</option>'}).join('');
+  var thumb=o.foto?'<img class="o-thumb" src="'+o.foto+'" alt="Foto de la pieza" data-act="verfoto">':'';
+  var wsp=(d.length>=8)?'<button class="btn small" data-act="wsp">WhatsApp</button>':'';
   return '<article class="order'+(o.estado==='Entregado'?' done':'')+(atrasado(o)?' late':'')+'" data-id="'+o.id+'">'+
-    '<div class="o-client"><strong>'+esc(o.nombre||'Sin nombre')+'</strong>'+tel+'</div>'+
+    '<div class="o-client">'+thumb+'<div><strong>'+esc(o.nombre||'Sin nombre')+'</strong>'+tel+tagsHTML(o)+'</div></div>'+
     '<div class="o-desc">'+esc(o.desc||'Sin descripción')+'</div>'+
     '<div class="o-actions"><select class="estado" data-e="'+o.estado+'" data-act="estado" aria-label="Estado del pedido">'+opts+'</select>'+
-    '<button class="btn small" data-act="ppto">Presupuesto en PDF</button><div class="row"><button class="btn small" data-act="edit">Editar</button><button class="btn small danger" data-act="del">Borrar</button></div></div>'+
+    '<button class="btn small" data-act="ppto">Presupuesto en PDF</button>'+wsp+'<div class="row"><button class="btn small" data-act="edit">Editar</button><button class="btn small danger" data-act="del">Borrar</button></div></div>'+
     '<dl class="o-meta">'+
       '<div><dt>Fecha del pedido</dt><dd>'+fdate(o.fecha)+'</dd></div>'+
       '<div><dt>Entrega</dt><dd>'+(o.entrega?fdate(o.entrega):'—')+(atrasado(o)?'<small class="late">Atrasado</small>':'')+'</dd></div>'+
@@ -722,6 +775,14 @@ $('orders').addEventListener('click',function(e){
   if(act.dataset.act==='edit'){openDialog(id)}
   if(act.dataset.act==='cobrar'){var oc=orders.find(function(x){return x.id===id});if(oc){oc.pagado=num(oc.precio);saveOrders();renderOrders();renderClients();toast('Cobro registrado')}}
   if(act.dataset.act==='ppto'){var oo=orders.find(function(x){return x.id===id});if(oo)openBudget({nombre:oo.nombre,tel:oo.tel,items:[itemFromOrder(oo)]})}
+  if(act.dataset.act==='wsp'){
+    var ow=orders.find(function(x){return x.id===id});
+    if(ow){ window.open('https://wa.me/'+digits(ow.tel)+'?text='+encodeURIComponent(wspMsg(ow)),'_blank'); }
+  }
+  if(act.dataset.act==='verfoto'){
+    var ov=orders.find(function(x){return x.id===id});
+    if(ov&&ov.foto){ $('fotoFull').src=ov.foto; $('dlgFoto').showModal(); }
+  }
   if(act.dataset.act==='del'){
     if(armed===act){
       orders=orders.filter(function(o){return o.id!==id});
@@ -750,6 +811,44 @@ function updGan(){
   $('f_gan').textContent='Diferencia entre costo final y material: '+$$(g)+'  ·  Saldo por cobrar: '+$$(sp);
 }
 ['f_precio','f_costo','f_pagado'].forEach(function(id){$(id).addEventListener('input',updGan)});
+var TAGS_PRESET=['Urgente','Para regalo','Reimpresión','Prioridad alta'];
+var dlgTags=[], dlgFoto='';
+function renderTagPick(){
+  $('f_tagpick').innerHTML=TAGS_PRESET.map(function(t){
+    return '<button type="button" class="tagchip" data-tag="'+esc(t)+'" aria-pressed="'+(dlgTags.indexOf(t)>-1)+'">'+esc(t)+'</button>';
+  }).join('');
+}
+$('f_tagpick').addEventListener('click',function(e){
+  var b=e.target.closest('[data-tag]'); if(!b) return;
+  var t=b.dataset.tag, i=dlgTags.indexOf(t);
+  if(i>-1) dlgTags.splice(i,1); else dlgTags.push(t);
+  renderTagPick();
+});
+function setFotoPreview(dataUrl){
+  dlgFoto=dataUrl||'';
+  $('f_fotoPrev').src=dlgFoto; $('f_fotoPrev').hidden=!dlgFoto;
+  $('f_fotoDel').hidden=!dlgFoto;
+}
+$('f_fotoBtn').addEventListener('click',function(){$('f_fotoInput').click()});
+$('f_fotoDel').addEventListener('click',function(){setFotoPreview('')});
+$('f_fotoInput').addEventListener('change',function(){
+  var file=this.files[0]; this.value=''; if(!file) return;
+  if(!/^image\//.test(file.type)){toast('Elegí un archivo de imagen');return}
+  var reader=new FileReader();
+  reader.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var maxSide=640, w=img.width, h=img.height, sc=Math.min(1,maxSide/Math.max(w,h));
+      var cv=document.createElement('canvas'); cv.width=Math.round(w*sc); cv.height=Math.round(h*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      setFotoPreview(cv.toDataURL('image/jpeg',0.62));
+    };
+    img.onerror=function(){toast('No se pudo leer la imagen')};
+    img.src=reader.result;
+  };
+  reader.onerror=function(){toast('No se pudo leer la imagen')};
+  reader.readAsDataURL(file);
+});
 function openDialog(id,pre){
   editing=id||null;
   var o=id?orders.find(function(x){return x.id===id}):null;
@@ -758,6 +857,8 @@ function openDialog(id,pre){
   $('f_nombre').value=d.nombre||'';
   $('f_tel').value=d.tel||'';
   $('f_desc').value=d.desc||'';
+  dlgTags=Array.isArray(d.tags)?d.tags.slice():[]; renderTagPick();
+  setFotoPreview(d.foto||'');
   $('f_fecha').value=d.fecha||today();
   $('f_estado').value=d.estado||ESTADOS[0];
   $('f_entrega').value=d.entrega||'';
@@ -778,6 +879,7 @@ $('f_nombre').addEventListener('change',function(){
   if(prev) $('f_tel').value=prev.tel;
 });
 $('dlgCancel').addEventListener('click',function(){$('dlg').close()});
+$('fotoClose').addEventListener('click',function(){$('dlgFoto').close()});
 $('dlgSave').addEventListener('click',function(){
   var nombre=$('f_nombre').value.trim();
   if(!nombre){toast('Falta el nombre del cliente');$('f_nombre').focus();return}
@@ -786,6 +888,8 @@ $('dlgSave').addEventListener('click',function(){
     nombre:nombre,
     tel:$('f_tel').value.trim(),
     desc:$('f_desc').value.trim(),
+    tags:dlgTags.slice(),
+    foto:dlgFoto||'',
     fecha:$('f_fecha').value||today(),
     estado:$('f_estado').value,
     entrega:$('f_entrega').value||'',
@@ -905,6 +1009,24 @@ function calcUpdate(){
   $('r_legend').innerHTML=parts.map(function(p){
     return '<li><span class="sw" style="background:var('+p[2]+')"></span><span class="lb">'+p[0]+'</span><b>'+$$(p[1]/qty)+'</b></li>';
   }).join('')+'<li class="sum"><span class="lb">Costo sin ganancia</span><b>'+$$(costo/qty)+'</b></li>';
+  checkPrecioBajo();
+}
+function normName(s){return (s||'').trim().toLowerCase()}
+function checkPrecioBajo(){
+  var el=$('r_warnLow'); if(!el) return;
+  var nm=normName(c.nombre);
+  if(!nm||!last||last.precio<=0){el.hidden=true;return}
+  var unit=last.precio/last.qty;
+  var match=piezas.filter(function(pz){return normName(pz.nombre)===nm});
+  if(!match.length){el.hidden=true;return}
+  match.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
+  var prev=match[0].precioUnit;
+  if(prev>0&&unit<prev*0.8){
+    el.hidden=false;
+    el.textContent='Ojo: este precio ('+$$(unit)+') es más bajo que la última vez que calculaste "'+c.nombre.trim()+'" ('+$$(prev)+').';
+  } else {
+    el.hidden=true;
+  }
 }
 $('btnLimpiar').addEventListener('click',function(){
   c.nombre='';c.qty=1;c.gramos=0;c.horas=0;c.minutos=0;c.manoObra=0;c.insumos=[{d:'',c:0}];
@@ -1005,7 +1127,7 @@ $('fileRestore').addEventListener('change',function(){
       list.forEach(function(o){
         if(!o||typeof o!=='object') return;
         var rec={id:String(o.id||uid()),nombre:String(o.nombre||''),tel:String(o.tel||''),desc:String(o.desc||''),fecha:String(o.fecha||today()),
-          entrega:String(o.entrega||''),pagado:num(o.pagado),
+          entrega:String(o.entrega||''),pagado:num(o.pagado),tags:Array.isArray(o.tags)?o.tags.map(String):[],foto:typeof o.foto==='string'?o.foto:'',
           estado:ESTADOS.indexOf(o.estado)>-1?o.estado:ESTADOS[0],min:num(o.min),costo:num(o.costo),precio:num(o.precio)};
         var i=orders.findIndex(function(x){return x.id===rec.id});
         if(i>-1) orders[i]=rec; else orders.push(rec);
@@ -1265,9 +1387,26 @@ function shiftMonth(k,n){
   var p=k.split('-'), d=new Date(+p[0],+p[1]-1+n,1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
-var cMes='todos', editingC=null;
+var cMes='todos', editingC=null, catManual=false;
 $('g_cat').innerHTML=CATS.map(function(x){return '<option>'+x+'</option>'}).join('');
-$('g_cat').addEventListener('change',function(){$('g_stockRow').hidden=(this.value!=='Filamento')});
+$('g_cat').addEventListener('change',function(){catManual=true;$('g_stockRow').hidden=(this.value!=='Filamento')});
+var CAT_KEYWORDS={
+  'Filamento':['filamento','rollo','pla','petg','abs','tpu','nylon','resina','bobina'],
+  'Insumos':['pegamento','lija','pintura','iman','imán','imanes','tornillo','silicona','cinta','esmalte','barniz','sticker','calcoman'],
+  'Repuestos y mantenimiento':['boquilla','nozzle','correa','rodamiento','hotend','extrusor','cama','vidrio','repuesto','fusible','ventilador','placa','driver','sensor'],
+  'Energía y servicios':['luz','electricidad','energia','energía','internet','alquiler','gas','factura','servicio'],
+  'Packaging y envíos':['envio','envío','correo','flete','sobre','packaging','etiqueta','precinto','caja']
+};
+function guessCategory(text){
+  var t=(text||'').toLowerCase();
+  for(var cat in CAT_KEYWORDS){ if(CAT_KEYWORDS[cat].some(function(k){return t.indexOf(k)>-1})) return cat; }
+  return null;
+}
+$('g_detalle').addEventListener('input',function(){
+  if(catManual) return;
+  var g=guessCategory(this.value);
+  if(g){ $('g_cat').value=g; $('g_stockRow').hidden=(g!=='Filamento'); }
+});
 
 function renderCompras(){
   var set={}; set[today().slice(0,7)]=1;
@@ -1294,6 +1433,7 @@ function renderCompras(){
 $('cMes').addEventListener('change',function(){cMes=this.value;renderCompras()});
 function openCompra(id){
   editingC=id||null;
+  catManual=!!id;
   var g=id?compras.find(function(x){return x.id===id}):null;
   $('dlgCTitle').textContent=g?'Editar compra':'Registrar compra';
   $('g_fecha').value=g?g.fecha:today();

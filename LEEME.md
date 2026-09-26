@@ -41,6 +41,17 @@ Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea p
 - Al armar un presupuesto (nuevo o desde un pedido), el desplegable **"+ Agregar pieza calculada"** deja elegir una de esas piezas y la agrega como ítem, con su precio ya cargado. Podés elegir varias, una por una, y ajustar la cantidad de cada una si hace falta.
 - Se pueden borrar piezas guardadas con la "×" de cada una.
 
+## Nuevo: etiquetas, fotos y WhatsApp con mensaje armado
+
+- **Etiquetas.** Al cargar o editar un pedido, marcá "Urgente", "Para regalo", "Reimpresión" o "Prioridad alta". Aparecen como una etiqueta de color en la tarjeta del pedido, para ubicarlo rápido sin leer toda la descripción.
+- **Foto de la pieza terminada.** En el mismo formulario, botón "Elegir foto". Se guarda una miniatura en la tarjeta del pedido; tocándola se ve en tamaño grande. Las fotos se comprimen solas para no ocupar mucho espacio.
+- **Botón de WhatsApp con mensaje armado.** En cada pedido con teléfono cargado, el botón "WhatsApp" abre el chat con un mensaje ya escrito, según el estado del pedido (en preparación, iniciado, listo para retirar, con el saldo pendiente si corresponde). Antes de enviarlo podés editarlo o borrarlo, como cualquier mensaje de WhatsApp.
+
+## Nuevo: dos ayudas automáticas, sin usar ninguna IA externa
+
+- **Categoría automática de compras.** Al escribir en "Detalle o proveedor" (por ejemplo "boquilla 0.4mm" o "2 rollos de PLA"), la categoría se completa sola según palabras clave. Si la cambiás vos a mano, no la vuelve a tocar para esa compra.
+- **Aviso de precio bajo.** En la Calculadora, si el precio por unidad de una pieza queda por debajo del 80% de lo que costaba la última vez que guardaste una pieza con el mismo nombre, aparece un aviso en rojo debajo del desglose. Sirve para no subcotizar sin darte cuenta.
+
 ## Nuevo: Stock de filamento, rentabilidad y clientes frecuentes
 
 - **Stock (pestaña nueva).** Cargá tus bobinas (nombre, gramos totales, gramos restantes, precio y un aviso de "poco stock"). Desde la Calculadora, elegí la bobina que usaste en "Bobina del stock" y tocá **"Registrar impresión"** para descontar los gramos automáticamente. Si registrás una compra con categoría **Filamento** y cargás los gramos comprados, se suman solos a la bobina que elijas (o se crea una bobina nueva si no elegís ninguna).
