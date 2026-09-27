@@ -185,6 +185,13 @@ dialog::backdrop{background:rgba(10,15,20,.55)}
 @media (max-width:480px){.fields{grid-template-columns:1fr}}
 .fields .full{grid-column:1 / -1}
 .ins-row{display:grid;grid-template-columns:1fr 120px 36px;gap:8px;margin-bottom:8px}
+.filrow{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--surface2)}
+.filrow .fr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.filrow .fr-grid label{font-size:11px;margin-bottom:2px}
+.filrow .fr-bottom{display:flex;gap:8px;align-items:center}
+.filrow .fr-bottom select{flex:1;min-width:0}
+.filrow .fr-bottom button{border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;color:var(--muted);padding:9px 12px;white-space:nowrap}
+@media (max-width:560px){.filrow .fr-grid{grid-template-columns:1fr 1fr}}
 .ins-row button{border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;color:var(--muted)}
 .result{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
 @media (max-width:820px){.result{position:static}}
@@ -387,16 +394,11 @@ p.sync.off::before{background:var(--danger)}
         </div>
         <div class="panel">
           <h2>Filamento</h2>
-          <div class="fields">
-            <div><label for="c_precioRollo">Precio del rollo ($)</label><input type="number" id="c_precioRollo" min="0" step="any" inputmode="decimal"></div>
-            <div><label for="c_pesoRollo">Peso del rollo (g)</label><input type="number" id="c_pesoRollo" min="1" step="any" inputmode="decimal"></div>
-            <div class="full"><label for="c_gramos">Filamento usado en la impresión (g)</label><input type="number" id="c_gramos" min="0" step="any" inputmode="decimal"></div>
-            <div class="full"><label for="c_bobina">Bobina del stock (opcional)</label>
-              <div class="unit"><select id="c_bobina" style="flex:1"><option value="">Sin descontar del stock</option></select>
-              <button class="btn small" id="btnDescontarStock" type="button">Registrar impresión</button></div>
-              <p class="hint" style="margin-top:4px">Elegí una bobina y tocá el botón cuando imprimas de verdad, para descontar los gramos del stock.</p>
-            </div>
-          </div>
+          <p class="hint" style="margin-top:-4px">Si la pieza es multicolor, agregá una fila por cada color con su propio precio y gramos.</p>
+          <div id="filamentos"></div>
+          <button class="btn small" id="btnAddFil" type="button">Agregar color</button>
+          <div style="margin-top:12px"><button class="btn" id="btnDescontarStock" type="button">Registrar impresión (descontar stock)</button></div>
+          <p class="hint" style="margin-top:6px">Elegí la bobina de cada color y tocá el botón cuando imprimas de verdad, para descontar los gramos de cada una.</p>
         </div>
         <div class="panel">
           <h2>Impresión</h2>
@@ -638,9 +640,17 @@ function lsGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
 
 var orders=lsGet(K_ORD); if(!Array.isArray(orders)) orders=[];
-var calcDefaults={nombre:'',qty:1,precioRollo:18000,pesoRollo:1000,gramos:0,horas:0,minutos:0,potencia:150,kwh:100,desgaste:300,manoObra:0,fallas:10,margen:100,redondeo:0,insumos:[{d:'',c:0}]};
-var c=Object.assign({},calcDefaults,lsGet(K_CALC)||{});
+var calcDefaults={nombre:'',qty:1,horas:0,minutos:0,potencia:150,kwh:100,desgaste:300,manoObra:0,fallas:10,margen:100,redondeo:0,insumos:[{d:'',c:0}],filamentos:[{nombre:'',precioRollo:18000,pesoRollo:1000,gramos:0,bobina:''}]};
+var savedCalc=lsGet(K_CALC)||{};
+var c=Object.assign({},calcDefaults,savedCalc);
 if(!Array.isArray(c.insumos)||!c.insumos.length) c.insumos=[{d:'',c:0}];
+if(!Array.isArray(savedCalc.filamentos)||!savedCalc.filamentos.length){
+  // versiones viejas guardaban un solo filamento en campos sueltos: los migramos a la primera fila
+  if(savedCalc.precioRollo!=null||savedCalc.pesoRollo!=null||savedCalc.gramos!=null){
+    c.filamentos=[{nombre:'',precioRollo:savedCalc.precioRollo!=null?savedCalc.precioRollo:18000,pesoRollo:savedCalc.pesoRollo!=null?savedCalc.pesoRollo:1000,gramos:savedCalc.gramos!=null?savedCalc.gramos:0,bobina:savedCalc.bobina||''}];
+  }
+}
+delete c.precioRollo; delete c.pesoRollo; delete c.gramos; delete c.bobina;
 function saveOrders(){ if(!lsSet(K_ORD,orders)) toast('No se pudo guardar en este navegador. Hacé una copia de seguridad.'); pushOrders(); }
 function saveCalc(){ lsSet(K_CALC,c); pushCalc(); }
 
@@ -945,18 +955,56 @@ $('clients').addEventListener('click',function(e){
 });
 
 /* ---------- calculadora ---------- */
-var NUM_FIELDS=['qty','precioRollo','pesoRollo','gramos','horas','minutos','potencia','kwh','desgaste','manoObra','fallas','margen'];
+var NUM_FIELDS=['qty','horas','minutos','potencia','kwh','desgaste','manoObra','fallas','margen'];
 function bindCalc(){
   $('c_nombre').value=c.nombre||'';
   NUM_FIELDS.forEach(function(k){
-    var el=$('c_'+k); el.value=(c[k]===0&&['gramos','horas','minutos','manoObra'].indexOf(k)>-1)?'':c[k];
+    var el=$('c_'+k); el.value=(c[k]===0&&['horas','minutos','manoObra'].indexOf(k)>-1)?'':c[k];
     el.addEventListener('input',function(){c[k]=num(el.value);saveCalc();calcUpdate()});
   });
   $('c_redondeo').value=String(c.redondeo||0);
   $('c_redondeo').addEventListener('change',function(){c.redondeo=num(this.value);saveCalc();calcUpdate()});
   $('c_nombre').addEventListener('input',function(){c.nombre=this.value;saveCalc()});
   renderInsumos();
+  renderFilamentos();
 }
+function bobinaOptionsHTML(selected){
+  return '<option value="">Sin descontar del stock</option>'+bobinas.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre,'es')}).map(function(bb){
+    return '<option value="'+bb.id+'"'+(bb.id===selected?' selected':'')+'>'+esc(bb.nombre)+' · '+Math.round(bb.restante)+' g'+(bajoStock(bb)?' (bajo)':'')+'</option>';
+  }).join('');
+}
+function renderFilamentos(){
+  var box=$('filamentos'); if(!box) return;
+  box.innerHTML=c.filamentos.map(function(f,i){
+    return '<div class="filrow" data-i="'+i+'"><div class="fr-grid">'+
+      '<div><label>Color / material</label><input type="text" data-k="nombre" value="'+esc(f.nombre||'')+'" placeholder="Ej: Negro"></div>'+
+      '<div><label>Precio rollo ($)</label><input type="number" data-k="precioRollo" min="0" step="any" inputmode="decimal" value="'+(f.precioRollo||'')+'"></div>'+
+      '<div><label>Peso rollo (g)</label><input type="number" data-k="pesoRollo" min="1" step="any" inputmode="decimal" value="'+(f.pesoRollo||'')+'"></div>'+
+      '<div><label>Gramos usados</label><input type="number" data-k="gramos" min="0" step="any" inputmode="decimal" value="'+(f.gramos||'')+'"></div>'+
+      '</div><div class="fr-bottom"><select data-k="bobina">'+bobinaOptionsHTML(f.bobina)+'</select>'+
+      (c.filamentos.length>1?'<button type="button" data-del="1">Quitar color</button>':'')+
+      '</div></div>';
+  }).join('');
+}
+function filRowUpdate(e){
+  var row=e.target.closest('.filrow'); if(!row) return;
+  var it=c.filamentos[+row.dataset.i], k=e.target.dataset.k; if(!it) return;
+  it[k]=(k==='nombre'||k==='bobina')?e.target.value:num(e.target.value);
+  saveCalc();calcUpdate();
+}
+$('filamentos').addEventListener('input',filRowUpdate);
+$('filamentos').addEventListener('change',filRowUpdate);
+$('filamentos').addEventListener('click',function(e){
+  if(!e.target.dataset.del) return;
+  var i=+e.target.closest('.filrow').dataset.i;
+  c.filamentos.splice(i,1); if(!c.filamentos.length) c.filamentos.push({nombre:'',precioRollo:18000,pesoRollo:1000,gramos:0,bobina:''});
+  saveCalc();renderFilamentos();calcUpdate();
+});
+$('btnAddFil').addEventListener('click',function(){
+  c.filamentos.push({nombre:'',precioRollo:18000,pesoRollo:1000,gramos:0,bobina:''});
+  saveCalc();renderFilamentos();calcUpdate();
+  var r=$('filamentos').querySelectorAll('.filrow input[data-k="nombre"]');r[r.length-1].focus();
+});
 function renderInsumos(){
   $('insumos').innerHTML=c.insumos.map(function(it,i){
     return '<div class="ins-row" data-i="'+i+'"><input type="text" data-k="d" value="'+esc(it.d)+'" placeholder="Insumo" aria-label="Insumo">'+
@@ -982,7 +1030,7 @@ $('btnAddIns').addEventListener('click',function(){c.insumos.push({d:'',c:0});sa
 var last=null;
 function calcUpdate(){
   var horas=c.horas+c.minutos/60;
-  var fil=c.pesoRollo>0?(c.precioRollo/c.pesoRollo)*c.gramos:0;
+  var fil=c.filamentos.reduce(function(s,f){return s+(num(f.pesoRollo)>0?(num(f.precioRollo)/num(f.pesoRollo))*num(f.gramos):0)},0);
   var ene=(c.potencia/1000)*horas*c.kwh;
   var des=horas*c.desgaste;
   var ins=c.insumos.reduce(function(s,i){return s+num(i.c)},0);
@@ -1029,13 +1077,15 @@ function checkPrecioBajo(){
   }
 }
 $('btnLimpiar').addEventListener('click',function(){
-  c.nombre='';c.qty=1;c.gramos=0;c.horas=0;c.minutos=0;c.manoObra=0;c.insumos=[{d:'',c:0}];
+  var base=c.filamentos[0]||{};
+  c.nombre='';c.qty=1;c.horas=0;c.minutos=0;c.manoObra=0;c.insumos=[{d:'',c:0}];
+  c.filamentos=[{nombre:'',precioRollo:base.precioRollo||18000,pesoRollo:base.pesoRollo||1000,gramos:0,bobina:''}];
   saveCalc();bindCalcValues();toast('Pieza limpiada. Se mantuvieron tus precios base.');
 });
 function bindCalcValues(){
   $('c_nombre').value=c.nombre;
-  NUM_FIELDS.forEach(function(k){$('c_'+k).value=(c[k]===0&&['gramos','horas','minutos','manoObra'].indexOf(k)>-1)?'':c[k]});
-  renderInsumos();calcUpdate();
+  NUM_FIELDS.forEach(function(k){$('c_'+k).value=(c[k]===0&&['horas','minutos','manoObra'].indexOf(k)>-1)?'':c[k]});
+  renderInsumos();renderFilamentos();calcUpdate();
 }
 $('btnAPedido').addEventListener('click',function(){
   if(!last||last.precio<=0){toast('Completá los datos de la pieza primero');return}
@@ -1495,15 +1545,15 @@ var bobinas=lsGet(K_STOCK); if(!Array.isArray(bobinas)) bobinas=[];
 function saveBobinas(){ if(!lsSet(K_STOCK,bobinas)) toast('No se pudo guardar en este navegador. Hacé una copia de seguridad.'); pushBobinas(); }
 function bajoStock(b){return num(b.restante)<=num(b.umbral)}
 function fillBobinaPicker(){
-  ['c_bobina','g_bobina'].forEach(function(id){
-    var sel=$(id); if(!sel) return;
-    var ph=id==='c_bobina'?'Sin descontar del stock':'Es una bobina nueva';
+  var sel=$('g_bobina');
+  if(sel){
     var keep=sel.value;
-    sel.innerHTML='<option value="">'+ph+'</option>'+bobinas.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre,'es')}).map(function(b){
+    sel.innerHTML='<option value="">Es una bobina nueva</option>'+bobinas.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre,'es')}).map(function(b){
       return '<option value="'+b.id+'">'+esc(b.nombre)+' · '+Math.round(b.restante)+' g'+(bajoStock(b)?' (bajo)':'')+'</option>';
     }).join('');
     if(bobinas.some(function(b){return b.id===keep})) sel.value=keep;
-  });
+  }
+  if($('filamentos')) renderFilamentos();
 }
 function renderStock(){
   var box=$('stockList'), low=bobinas.filter(bajoStock).length;
@@ -1574,12 +1624,18 @@ $('stockList').addEventListener('click',function(e){
   }
 });
 $('btnDescontarStock').addEventListener('click',function(){
-  var id=$('c_bobina').value; if(!id){toast('Elegí una bobina primero');return}
-  var b=bobinas.find(function(x){return x.id===id}); if(!b) return;
-  var g=num(c.gramos); if(g<=0){toast('Cargá los gramos que usaste en Filamento');return}
-  b.restante=Math.max(0,b.restante-g);
+  var rows=c.filamentos.filter(function(f){return f.bobina&&num(f.gramos)>0});
+  if(!rows.length){toast('Elegí una bobina y cargá los gramos en al menos un color');return}
+  var hechos=[], bajos=[];
+  rows.forEach(function(f){
+    var b=bobinas.find(function(x){return x.id===f.bobina}); if(!b) return;
+    b.restante=Math.max(0,b.restante-num(f.gramos));
+    hechos.push(b.nombre+' (-'+num(f.gramos)+' g)');
+    if(bajoStock(b)) bajos.push(b.nombre);
+  });
+  if(!hechos.length){toast('No encontré esas bobinas. Puede que ya las hayas borrado.');return}
   saveBobinas();renderStock();fillBobinaPicker();
-  toast(bajoStock(b)?'Impresión registrada. Queda poco stock de "'+b.nombre+'"':'Impresión registrada, se descontaron '+g+' g de "'+b.nombre+'"');
+  toast('Impresión registrada: '+hechos.join(', ')+(bajos.length?'. Queda poco stock de '+bajos.join(', '):''));
 });
 
 /* ---------- resumen mensual ---------- */
