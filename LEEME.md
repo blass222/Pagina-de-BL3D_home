@@ -41,6 +41,11 @@ Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea p
 - Al armar un presupuesto (nuevo o desde un pedido), el desplegable **"+ Agregar pieza calculada"** deja elegir una de esas piezas y la agrega como ítem, con su precio ya cargado. Podés elegir varias, una por una, y ajustar la cantidad de cada una si hace falta.
 - Se pueden borrar piezas guardadas con la "×" de cada una.
 
+## Nuevo: foto en cada bobina del Stock
+
+- Al agregar o editar una bobina, botón "Elegir foto" para sacarle o subirle una foto al rollo. Sirve para identificar el color de un vistazo, sobre todo si tenés varios tonos parecidos.
+- La miniatura aparece en la tarjeta de la bobina; tocándola se ve en grande.
+
 ## Nuevo: piezas multicolor en la Calculadora
 
 - En "Filamento" ahora podés agregar una fila por cada color con **"Agregar color"**: cada una tiene su propio nombre, precio de rollo, peso de rollo y gramos usados, además de su propia bobina del stock.
