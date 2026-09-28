@@ -155,7 +155,12 @@ select.estado[data-e="Finalizado"]{background:var(--st-fin-bg);color:var(--st-fi
 .client{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
 .client.fav{border-color:#E0A526}
 .client header{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
-.client header>div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.client header .cl-main{display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1}
+.client header .cl-txt{min-width:0}
+.client header .cl-txt strong{display:block;overflow-wrap:anywhere}
+.client header .cl-txt a,.client header .cl-txt span{display:block;overflow-wrap:anywhere}
+.client header .tot{flex:none;text-align:right;max-width:45%}
+.client header .tot small{display:block}
 .star{border:0;background:transparent;cursor:pointer;font-size:19px;line-height:1;color:#C99A1E;padding:0;flex:none}
 .star[aria-pressed="false"]{color:var(--muted)}
 .client header strong{font-size:17px;display:block}
@@ -192,6 +197,14 @@ dialog::backdrop{background:rgba(10,15,20,.55)}
 .filrow .fr-bottom select{flex:1;min-width:0}
 .filrow .fr-bottom button{border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;color:var(--muted);padding:9px 12px;white-space:nowrap}
 @media (max-width:560px){.filrow .fr-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:720px){
+  .toolbar .grow{flex:1 1 100%;max-width:none !important}
+  .o-actions select.estado{flex:1 1 100%}
+  .o-actions .btn{flex:1 1 auto}
+  .sep{display:none}
+  header.top nav.tabs{display:grid;grid-template-columns:repeat(3,1fr);overflow:visible;width:100%}
+  nav.tabs button{padding:10px 4px;text-align:center}
+}
 .ins-row button{border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;color:var(--muted)}
 .result{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
 @media (max-width:820px){.result{position:static}}
@@ -306,7 +319,7 @@ p.sync.off::before{background:var(--danger)}
     <div class="toolbar">
       <button class="btn primary" id="btnNuevo">Nuevo pedido</button>
       <button class="btn" id="btnNuevoP">Nuevo presupuesto</button>
-      <input class="grow" type="search" id="buscar" placeholder="Buscar por cliente, teléfono o descripción" aria-label="Buscar pedidos" style="max-width:420px">
+      <input class="grow" type="search" id="buscar" placeholder="Buscar cliente, teléfono o pedido" aria-label="Buscar pedidos" style="max-width:420px">
     </div>
     <div class="chips" id="chips" role="group" aria-label="Filtrar por estado"></div>
     <div class="totals" id="totals"></div>
@@ -939,7 +952,7 @@ function renderClients(){
     var items=sorted(g.list).map(function(o){
       return '<li data-id="'+o.id+'"><span class="d">'+esc(o.desc||'Sin descripción')+'</span><span class="pill" data-e="'+o.estado+'">'+o.estado+'</span><b>'+$$(o.precio)+'</b></li>';
     }).join('');
-    return '<div class="client'+(fav?' fav':'')+'"><header><div><button class="star" data-fav="'+esc(k)+'" aria-pressed="'+fav+'" aria-label="Marcar como cliente frecuente" title="Marcar como cliente frecuente">'+(fav?'★':'☆')+'</button><strong>'+esc(g.nombre||'Sin nombre')+'</strong>'+tel+'</div>'+
+    return '<div class="client'+(fav?' fav':'')+'"><header><div class="cl-main"><button class="star" data-fav="'+esc(k)+'" aria-pressed="'+fav+'" aria-label="Marcar como cliente frecuente" title="Marcar como cliente frecuente">'+(fav?'★':'☆')+'</button><div class="cl-txt"><strong>'+esc(g.nombre||'Sin nombre')+'</strong>'+tel+'</div></div>'+
       '<div class="tot">'+$$(tot)+'<small>'+g.list.length+(g.list.length===1?' pedido':' pedidos')+'</small></div></header><ul>'+items+'</ul><button class="btn small" style="margin-top:10px" data-ppto-client="'+esc(k)+'">Presupuesto de sus pedidos</button></div>';
   }).join('');
 }
