@@ -41,6 +41,16 @@ Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea p
 - Al armar un presupuesto (nuevo o desde un pedido), el desplegable **"+ Agregar pieza calculada"** deja elegir una de esas piezas y la agrega como ítem, con su precio ya cargado. Podés elegir varias, una por una, y ajustar la cantidad de cada una si hace falta.
 - Se pueden borrar piezas guardadas con la "×" de cada una.
 
+## Corregido: el "Cobrado" del Resumen ahora usa la fecha real del cobro
+
+Antes, si un pedido se hacía en septiembre y el saldo se cobraba en octubre, ese cobro aparecía en el Resumen de septiembre (el mes del pedido) en vez de octubre (el mes en que realmente entró la plata). Ahora cada vez que cobrás algo —con "Cobrar saldo" o editando el campo "Seña / cobrado hasta ahora"— queda fechado con el día en que lo cargaste, y el Resumen separa correctamente:
+- **Ventas**: lo que se vendió ese mes (según la fecha del pedido).
+- **Cobrado**: la plata que realmente entró ese mes (según cuándo se cargó cada cobro).
+
+La seña que cargás al crear un pedido nuevo se fecha con la fecha del pedido, como siempre. Lo que agregás después (un cobro parcial, el saldo final) se fecha con el día en que lo cargás. Si corregís un monto a la baja, se descuenta del cobro más reciente, no del más viejo.
+
+Los pedidos que ya tenías cargados no cambian: el dinero que ya figuraba como cobrado se mantiene en el mismo mes del pedido. Solo los cobros que registres de ahora en adelante quedan con la fecha correcta.
+
 ## Nuevo: foto en cada bobina del Stock
 
 - Al agregar o editar una bobina, botón "Elegir foto" para sacarle o subirle una foto al rollo. Sirve para identificar el color de un vistazo, sobre todo si tenés varios tonos parecidos.

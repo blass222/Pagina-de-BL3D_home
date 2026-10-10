@@ -704,6 +704,22 @@ function setTab(name){
 document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab)})});
 
 /* ---------- pedidos ---------- */
+orders.forEach(function(o){
+  // migración: versiones viejas no registraban en qué fecha se cobró cada pago
+  if(!Array.isArray(o.pagos)) o.pagos=num(o.pagado)>0?[{monto:num(o.pagado),fecha:o.fecha||today()}]:[];
+});
+function addPagoDelta(pagos,delta,fecha){
+  pagos=(pagos||[]).map(function(p){return {monto:num(p.monto),fecha:p.fecha}});
+  if(delta>0){ pagos.push({monto:delta,fecha:fecha}); }
+  else if(delta<0){
+    var rest=-delta;
+    for(var i=pagos.length-1;i>=0&&rest>0.0001;i--){
+      var take=Math.min(rest,pagos[i].monto); pagos[i].monto-=take; rest-=take;
+    }
+    pagos=pagos.filter(function(p){return p.monto>0.0001});
+  }
+  return pagos;
+}
 function saldo(o){return Math.max(0,num(o.precio)-num(o.pagado))}
 function atrasado(o){return o.estado!=='Entregado'&&!!o.entrega&&o.entrega<today()}
 var filtro='todos', query='';
@@ -808,7 +824,15 @@ $('orders').addEventListener('click',function(e){
   var card=e.target.closest('.order'); if(!card) return;
   var id=card.dataset.id;
   if(act.dataset.act==='edit'){openDialog(id)}
-  if(act.dataset.act==='cobrar'){var oc=orders.find(function(x){return x.id===id});if(oc){oc.pagado=num(oc.precio);saveOrders();renderOrders();renderClients();toast('Cobro registrado')}}
+  if(act.dataset.act==='cobrar'){
+    var oc=orders.find(function(x){return x.id===id});
+    if(oc){
+      var delta=Math.max(0,num(oc.precio)-num(oc.pagado));
+      oc.pagos=addPagoDelta(oc.pagos,delta,today());
+      oc.pagado=num(oc.precio);
+      saveOrders();renderOrders();renderClients();toast('Cobro registrado');
+    }
+  }
   if(act.dataset.act==='ppto'){var oo=orders.find(function(x){return x.id===id});if(oo)openBudget({nombre:oo.nombre,tel:oo.tel,items:[itemFromOrder(oo)]})}
   if(act.dataset.act==='wsp'){
     var ow=orders.find(function(x){return x.id===id});
@@ -921,6 +945,12 @@ $('fotoClose').addEventListener('click',function(){$('dlgFoto').close()});
 $('dlgSave').addEventListener('click',function(){
   var nombre=$('f_nombre').value.trim();
   if(!nombre){toast('Falta el nombre del cliente');$('f_nombre').focus();return}
+  var fecha=$('f_fecha').value||today();
+  var oldOrder=editing?orders.find(function(x){return x.id===editing}):null;
+  var oldPagado=oldOrder?num(oldOrder.pagado):0;
+  var newPagado=num($('f_pagado').value);
+  // un pedido nuevo con seña se fecha como el pedido; un cobro agregado después se fecha hoy
+  var fechaPago=editing?today():fecha;
   var rec={
     id:editing||uid(),
     nombre:nombre,
@@ -928,10 +958,11 @@ $('dlgSave').addEventListener('click',function(){
     desc:$('f_desc').value.trim(),
     tags:dlgTags.slice(),
     foto:dlgFoto||'',
-    fecha:$('f_fecha').value||today(),
+    fecha:fecha,
     estado:$('f_estado').value,
     entrega:$('f_entrega').value||'',
-    pagado:num($('f_pagado').value),
+    pagado:newPagado,
+    pagos:addPagoDelta(oldOrder?oldOrder.pagos:[],newPagado-oldPagado,fechaPago),
     min:Math.round(num($('f_h').value)*60+num($('f_m').value)),
     costo:num($('f_costo').value),
     precio:num($('f_precio').value)
@@ -1204,8 +1235,10 @@ $('fileRestore').addEventListener('change',function(){
       var n=0;
       list.forEach(function(o){
         if(!o||typeof o!=='object') return;
-        var rec={id:String(o.id||uid()),nombre:String(o.nombre||''),tel:String(o.tel||''),desc:String(o.desc||''),fecha:String(o.fecha||today()),
-          entrega:String(o.entrega||''),pagado:num(o.pagado),tags:Array.isArray(o.tags)?o.tags.map(String):[],foto:typeof o.foto==='string'?o.foto:'',
+        var rfecha=String(o.fecha||today()), rpagado=num(o.pagado);
+        var rec={id:String(o.id||uid()),nombre:String(o.nombre||''),tel:String(o.tel||''),desc:String(o.desc||''),fecha:rfecha,
+          entrega:String(o.entrega||''),pagado:rpagado,tags:Array.isArray(o.tags)?o.tags.map(String):[],foto:typeof o.foto==='string'?o.foto:'',
+          pagos:Array.isArray(o.pagos)?o.pagos.map(function(pg){return {monto:num(pg.monto),fecha:String(pg.fecha||rfecha)}}):(rpagado>0?[{monto:rpagado,fecha:rfecha}]:[]),
           estado:ESTADOS.indexOf(o.estado)>-1?o.estado:ESTADOS[0],min:num(o.min),costo:num(o.costo),precio:num(o.precio)};
         var i=orders.findIndex(function(x){return x.id===rec.id});
         if(i>-1) orders[i]=rec; else orders.push(rec);
@@ -1685,8 +1718,8 @@ var sMes=today().slice(0,7);
 function monthStats(k){
   var r={ventas:0,cobrado:0,pend:0,nPed:0,compras:0,nCom:0};
   orders.forEach(function(o){
-    if(mkey(o.fecha)!==k) return;
-    r.ventas+=num(o.precio); r.cobrado+=Math.min(num(o.pagado),num(o.precio)); r.pend+=saldo(o); r.nPed++;
+    if(mkey(o.fecha)===k){ r.ventas+=num(o.precio); r.pend+=saldo(o); r.nPed++; }
+    (o.pagos||[]).forEach(function(pg){ if(mkey(pg.fecha)===k) r.cobrado+=num(pg.monto); });
   });
   compras.forEach(function(g){ if(mkey(g.fecha)===k){r.compras+=num(g.monto);r.nCom++} });
   return r;
