@@ -41,6 +41,10 @@ Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea p
 - Al armar un presupuesto (nuevo o desde un pedido), el desplegable **"+ Agregar pieza calculada"** deja elegir una de esas piezas y la agrega como ítem, con su precio ya cargado. Podés elegir varias, una por una, y ajustar la cantidad de cada una si hace falta.
 - Se pueden borrar piezas guardadas con la "×" de cada una.
 
+## Nuevo: colores a tono con el logo
+
+El fondo de la app ahora tiene un degradé suave celeste-violeta en las esquinas, como el logo, tanto en modo claro como oscuro. Los botones y las pestañas pasaron de verde a violeta para combinar. Los colores de estado de los pedidos (amarillo "en preparación", azul "iniciado", verde "finalizado") no cambiaron, para que se sigan distinguiendo de un vistazo.
+
 ## Corregido: el "Cobrado" del Resumen ahora usa la fecha real del cobro
 
 Antes, si un pedido se hacía en septiembre y el saldo se cobraba en octubre, ese cobro aparecía en el Resumen de septiembre (el mes del pedido) en vez de octubre (el mes en que realmente entró la plata). Ahora cada vez que cobrás algo —con "Cobrar saldo" o editando el campo "Seña / cobrado hasta ahora"— queda fechado con el día en que lo cargaste, y el Resumen separa correctamente:

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BL3D · Gestión del taller</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0F766E">
+<meta name="theme-color" content="#7C3AED">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="BL3D">
@@ -20,11 +20,13 @@
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
   --bg:#EBEEF1; --surface:#FFFFFF; --surface2:#F4F6F8; --ink:#16202A; --muted:#5B6875; --line:#D3D9DF;
-  --accent:#0F766E; --accent-ink:#FFFFFF; --danger:#B42318;
+  --accent:#7C3AED; --accent-ink:#FFFFFF; --danger:#B42318;
+  --logo-a:#22D3FF; --logo-b:#B721FF;
+  --grad1:rgba(34,211,255,.16); --grad2:rgba(183,33,255,.14); --grad3:rgba(183,33,255,.09);
   --st-prep-bg:#FBEBC8; --st-prep-fg:#7A4B00;
   --st-ini-bg:#D9E6FF; --st-ini-fg:#123A8C;
   --st-fin-bg:#D3F0DD; --st-fin-fg:#0E5A2A;
-  --c1:#0F766E; --c2:#2563EB; --c3:#7C3AED; --c4:#D97706; --c5:#DB2777; --c6:#64748B; --c7:#16A34A;
+  --c1:#7C3AED; --c2:#2563EB; --c3:#22B8CF; --c4:#D97706; --c5:#DB2777; --c6:#64748B; --c7:#16A34A;
   --shadow:0 1px 2px rgba(22,32,42,.06);
   --head:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
   --body:'Figtree','Segoe UI',system-ui,-apple-system,sans-serif;
@@ -32,7 +34,8 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#10161C; --surface:#182028; --surface2:#1E2832; --ink:#E7ECF1; --muted:#95A2B0; --line:#2B3744;
-    --accent:#2DB3A6; --accent-ink:#06211E; --danger:#F97066;
+    --accent:#B388FF; --accent-ink:#1C1033; --danger:#F97066;
+    --grad1:rgba(34,211,255,.20); --grad2:rgba(183,33,255,.20); --grad3:rgba(124,58,237,.16);
     --st-prep-bg:#4A3610; --st-prep-fg:#F6D591;
     --st-ini-bg:#1B3363; --st-ini-fg:#B8D0FF;
     --st-fin-bg:#173C27; --st-fin-fg:#A6E6BE;
@@ -41,7 +44,8 @@
 }
 :root[data-theme="dark"]{
   --bg:#10161C; --surface:#182028; --surface2:#1E2832; --ink:#E7ECF1; --muted:#95A2B0; --line:#2B3744;
-  --accent:#2DB3A6; --accent-ink:#06211E; --danger:#F97066;
+  --accent:#B388FF; --accent-ink:#1C1033; --danger:#F97066;
+  --grad1:rgba(34,211,255,.20); --grad2:rgba(183,33,255,.20); --grad3:rgba(124,58,237,.16);
   --st-prep-bg:#4A3610; --st-prep-fg:#F6D591;
   --st-ini-bg:#1B3363; --st-ini-fg:#B8D0FF;
   --st-fin-bg:#173C27; --st-fin-fg:#A6E6BE;
@@ -49,7 +53,15 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);min-height:100%}
+body{
+  margin:0;color:var(--ink);font:400 16px/1.45 var(--body);min-height:100%;
+  background:
+    radial-gradient(1100px circle at 10% -8%, var(--grad1), transparent 55%),
+    radial-gradient(900px circle at 105% 4%, var(--grad2), transparent 50%),
+    radial-gradient(900px circle at 40% 115%, var(--grad3), transparent 55%),
+    var(--bg);
+  background-attachment:fixed,fixed,fixed,fixed;
+}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
