@@ -27,6 +27,12 @@ Se usa Firebase, de Google. El plan gratuito (Spark) alcanza de sobra para este 
 
 Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea público. La seguridad la dan las reglas del paso 4 y tu contraseña.
 
+## Nuevo: buscador de clientes, recargar una pieza guardada y autocompletar bobina
+
+- **Buscador en Clientes.** Arriba de la lista, un buscador por nombre o teléfono.
+- **"Cargar" en las piezas guardadas.** Además de usarlas en un presupuesto, el botón "Cargar" trae de vuelta todos los datos de esa pieza a la Calculadora (filamentos, tiempo, insumos, etc.) para recalcularla o ajustarla.
+- **Autocompletar al elegir bobina.** En una fila de Filamento, al elegir una bobina del stock, el precio y el peso del rollo se completan solos con los datos de esa bobina (y el nombre, si estaba vacío).
+
 ## Primer uso
 
 - Abrí la app: te pide email y contraseña.
