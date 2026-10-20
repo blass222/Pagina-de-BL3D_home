@@ -180,6 +180,7 @@ select.estado[data-e="Finalizado"]{background:var(--st-fin-bg);color:var(--st-fi
 .client .tot{text-align:right;font-weight:700;font-family:var(--head);font-size:18px}
 .client .tot small{display:block;font:400 12px var(--body);color:var(--muted)}
 .client ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cl-note{width:100%;min-height:46px;margin-top:10px;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;resize:vertical}
 .client li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:9px;cursor:pointer;font-size:14px}
 .client li:hover{outline:1px solid var(--line)}
 .client li span.d{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -237,6 +238,15 @@ dialog::backdrop{background:rgba(10,15,20,.55)}
 .pz-row .pz-price{font-weight:700;white-space:nowrap}
 .pz-row button{border:1px solid var(--line);background:var(--surface);border-radius:7px;cursor:pointer;padding:4px 9px;font-size:14px;color:var(--muted)}
 .pz-row button:hover{border-color:var(--accent);color:var(--accent)}
+.catitem{display:flex;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;flex-wrap:wrap}
+.catitem .fotopick{flex-direction:column;align-items:flex-start;gap:8px}
+.catitem .fotopick img{width:84px;height:84px}
+.catitem-body{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.catitem-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.catitem-top strong{font-size:15px}
+.catitem-top span{color:var(--muted);font-weight:700}
+.catitem label.vis{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.catitem textarea{min-height:44px;font-size:13px}
 .pz-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
 .pz-pick select{flex:1 1 220px}
 .foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px;color:var(--muted);font-size:13px}
@@ -331,6 +341,7 @@ p.sync.off::before{background:var(--danger)}
       <button role="tab" data-tab="stock" aria-selected="false">Stock</button>
       <button role="tab" data-tab="resumen" aria-selected="false">Resumen</button>
       <button role="tab" data-tab="calc" aria-selected="false">Calculadora</button>
+      <button role="tab" data-tab="catalogo" aria-selected="false">Catálogo</button>
     </nav>
   </header>
 
@@ -411,7 +422,7 @@ p.sync.off::before{background:var(--danger)}
       <div id="sPiezas"></div>
     </div>
     <div class="panel">
-      <h3>Detalle por mes</h3>
+      <div class="stat-head" style="margin-bottom:10px"><h3 style="margin:0;flex:1">Detalle por mes</h3><button class="btn small" id="btnExportResumen">Exportar a Excel (CSV)</button></div>
       <div class="tblwrap" id="sTable"></div>
       <p class="hint" style="margin-top:8px">Ventas: pedidos cargados en cada mes, según su fecha de pedido. Compras: gastos registrados en la pestaña Compras.</p>
     </div>
@@ -485,6 +496,27 @@ p.sync.off::before{background:var(--danger)}
         <div id="pzList"></div>
       </div>
     </div>
+  </section>
+
+  <!-- CATÁLOGO -->
+  <section id="tab-catalogo" hidden>
+    <div class="panel">
+      <h2>Catálogo para compartir</h2>
+      <p class="hint" style="margin-top:-4px">Elegí piezas de las que guardaste en la Calculadora y generá una página aparte, sin login, para mandar por WhatsApp.</p>
+      <div class="grid2">
+        <div><label for="cat_titulo">Título</label><input type="text" id="cat_titulo"></div>
+        <div><label for="cat_whatsapp">Tu WhatsApp (para que te escriban)</label><input type="tel" id="cat_whatsapp" placeholder="5491122334455" inputmode="tel"></div>
+      </div>
+      <div><label for="cat_bajada">Bajada (opcional)</label><textarea id="cat_bajada" placeholder="Ej: Impresiones 3D a medida. Elegí tu pieza y escribime."></textarea></div>
+      <button class="btn primary" id="btnGenCatalogo" style="margin-top:4px">Generar página del catálogo</button>
+      <p class="hint" style="margin-top:8px">Se descarga un archivo <code>catalogo.html</code>. Subilo junto a los demás archivos de tu repositorio y compartí el link que te queda (por ejemplo, tu-usuario.github.io/tu-repo/catalogo.html).</p>
+    </div>
+    <div class="panel">
+      <h3>Piezas a mostrar</h3>
+      <div id="catList"></div>
+      <p class="hint" style="margin-top:8px">Las piezas salen de las que guardaste en la Calculadora. Si falta alguna, andá a Calculadora y tocá "Guardar pieza".</p>
+    </div>
+    <input type="file" id="cat_fotoInput" accept="image/*" hidden>
   </section>
 </div>
 
@@ -643,6 +675,7 @@ p.sync.off::before{background:var(--danger)}
     </details>
     <div class="actions">
       <button class="btn" id="pCancel">Cancelar</button>
+      <button class="btn" id="pToOrder">Pasar a pedido</button>
       <button class="btn primary" id="pSave">Descargar PDF</button>
     </div>
   </div>
@@ -727,12 +760,13 @@ function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeo
 
 /* ---------- pestañas ---------- */
 function setTab(name){
-  ['pedidos','clientes','compras','stock','resumen','calc'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
+  ['pedidos','clientes','compras','stock','resumen','calc','catalogo'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
   document.querySelectorAll('nav.tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.tab===name))});
   if(name==='clientes') renderClients();
   if(name==='compras') renderCompras();
   if(name==='stock') renderStock();
   if(name==='resumen') renderResumen();
+  if(name==='catalogo') renderCatalogo();
 }
 document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab)})});
 
@@ -1041,9 +1075,18 @@ function renderClients(){
       return '<li data-id="'+o.id+'"><span class="d">'+esc(o.desc||'Sin descripción')+'</span><span class="pill" data-e="'+o.estado+'">'+o.estado+'</span><b>'+$$(o.precio)+'</b></li>';
     }).join('');
     return '<div class="client'+(fav?' fav':'')+'"><header><div class="cl-main"><button class="star" data-fav="'+esc(k)+'" aria-pressed="'+fav+'" aria-label="Marcar como cliente frecuente" title="Marcar como cliente frecuente">'+(fav?'★':'☆')+'</button><div class="cl-txt"><strong>'+esc(g.nombre||'Sin nombre')+'</strong>'+tel+'</div></div>'+
-      '<div class="tot">'+$$(tot)+'<small>'+g.list.length+(g.list.length===1?' pedido':' pedidos')+'</small></div></header><ul>'+items+'</ul><button class="btn small" style="margin-top:10px" data-ppto-client="'+esc(k)+'">Presupuesto de sus pedidos</button></div>';
+      '<div class="tot">'+$$(tot)+'<small>'+g.list.length+(g.list.length===1?' pedido':' pedidos')+'</small></div></header><ul>'+items+'</ul>'+
+      '<textarea class="cl-note" data-note="'+esc(k)+'" placeholder="Nota sobre este cliente (preferencias, medidas, etc.)">'+esc((clientesInfo[k]&&clientesInfo[k].nota)||'')+'</textarea>'+
+      '<button class="btn small" style="margin-top:10px" data-ppto-client="'+esc(k)+'">Presupuesto de sus pedidos</button></div>';
   }).join('');
 }
+$('clients').addEventListener('change',function(e){
+  var t=e.target.closest('[data-note]'); if(!t) return;
+  var k=t.dataset.note;
+  clientesInfo[k]=clientesInfo[k]||{};
+  clientesInfo[k].nota=t.value;
+  saveClientesInfo();
+});
 $('clients').addEventListener('click',function(e){
   var star=e.target.closest('[data-fav]');
   if(star){
@@ -1268,7 +1311,7 @@ $('p_pickPieza').addEventListener('change',function(){
 });
 
 /* ---------- exportar / restaurar ---------- */
-var MIME={pdf:'application/pdf',csv:'text/csv;charset=utf-8',json:'application/json'};
+var MIME={pdf:'application/pdf',csv:'text/csv;charset=utf-8',json:'application/json',html:'text/html;charset=utf-8'};
 function saveFile(name,data){
   try{
     var ext=name.split('.').pop().toLowerCase();
@@ -1294,7 +1337,7 @@ $('btnCsvC').addEventListener('click',function(){
   saveFile('compras-3d.csv','\uFEFF'+rows.map(function(r){return r.map(q).join(';')}).join('\r\n'));
 });
 $('btnBackup').addEventListener('click',function(){
-  saveFile('copia-taller-3d.json',JSON.stringify({version:4,pedidos:orders,compras:compras,piezas:piezas,stock:bobinas,clientesInfo:clientesInfo,calculadora:c},null,2));
+  saveFile('copia-taller-3d.json',JSON.stringify({version:5,pedidos:orders,compras:compras,piezas:piezas,stock:bobinas,clientesInfo:clientesInfo,calculadora:c,catalogo:catCfg},null,2));
 });
 $('btnRestore').addEventListener('click',function(){$('fileRestore').click()});
 $('fileRestore').addEventListener('change',function(){
@@ -1331,7 +1374,8 @@ $('fileRestore').addEventListener('change',function(){
       if(!Array.isArray(j)&&Array.isArray(j.piezas)){
         j.piezas.forEach(function(pz){
           if(!pz||typeof pz!=='object') return;
-          var rp={id:String(pz.id||uid()),nombre:String(pz.nombre||'Pieza'),precioUnit:num(pz.precioUnit),costoUnit:num(pz.costoUnit),ganUnit:num(pz.ganUnit),qty:Math.max(1,Math.floor(num(pz.qty))||1),min:num(pz.min),fecha:String(pz.fecha||today()),calc:pz.calc&&typeof pz.calc==='object'?pz.calc:undefined};
+          var rp={id:String(pz.id||uid()),nombre:String(pz.nombre||'Pieza'),precioUnit:num(pz.precioUnit),costoUnit:num(pz.costoUnit),ganUnit:num(pz.ganUnit),qty:Math.max(1,Math.floor(num(pz.qty))||1),min:num(pz.min),fecha:String(pz.fecha||today()),calc:pz.calc&&typeof pz.calc==='object'?pz.calc:undefined,
+            catVisible:!!pz.catVisible,catDesc:typeof pz.catDesc==='string'?pz.catDesc:'',catFoto:typeof pz.catFoto==='string'?pz.catFoto:''};
           var pIdx=piezas.findIndex(function(x){return x.id===rp.id});
           if(pIdx>-1) piezas[pIdx]=rp; else piezas.push(rp);
           np++;
@@ -1352,6 +1396,10 @@ $('fileRestore').addEventListener('change',function(){
       if(!Array.isArray(j)&&j.clientesInfo&&typeof j.clientesInfo==='object'){
         Object.keys(j.clientesInfo).forEach(function(k){clientesInfo[k]=j.clientesInfo[k]});
         saveClientesInfo();
+      }
+      if(!Array.isArray(j)&&j.catalogo&&typeof j.catalogo==='object'){
+        catCfg={titulo:String(j.catalogo.titulo||catCfg.titulo||''),bajada:String(j.catalogo.bajada||''),whatsapp:String(j.catalogo.whatsapp||'')};
+        saveCatCfg();
       }
       saveOrders();renderOrders();renderClients();renderCompras();renderResumen();
       toast('Se restauraron '+n+' pedidos'+(nc?' y '+nc+' compras':'')+(np?' y '+np+' piezas':'')+(nb?' y '+nb+' bobinas':''));
@@ -1555,6 +1603,20 @@ $('pSave').addEventListener('click',function(){
   });
 });
 
+$('pToOrder').addEventListener('click',function(){
+  var items=pItems.filter(function(it){return (it.d||'').trim()||num(it.p)>0}).map(function(it){return {d:(it.d||'').trim(),q:Math.max(1,Math.floor(num(it.q))||1),p:num(it.p)}});
+  var nombre=$('p_nombre').value.trim();
+  if(!nombre){toast('Falta el nombre del cliente');$('p_nombre').focus();return}
+  if(!items.length){toast('Agregá al menos un ítem');return}
+  var total=items.reduce(function(s,it){return s+it.q*it.p},0);
+  var desc=items.length===1?items[0].d:items.map(function(it){return (it.q>1?it.q+'x ':'')+it.d}).join(' · ');
+  var senaPct=Math.min(100,Math.max(0,num($('p_sena').value)));
+  var pagado=senaPct>0?Math.round(total*senaPct/100):0;
+  $('dlgP').close();
+  setTab('pedidos');
+  openDialog(null,{nombre:nombre,tel:$('p_tel').value.trim(),desc:desc,precio:Math.round(total),pagado:pagado});
+});
+
 /* ---------- compras ---------- */
 var K_GAST='taller3d:compras';
 var CATS=['Filamento','Insumos','Repuestos y mantenimiento','Energía y servicios','Packaging y envíos','Otros'];
@@ -1670,6 +1732,116 @@ $('cList').addEventListener('click',function(e){
       setTimeout(function(){if(armedC===a){a.textContent='Borrar';a.classList.remove('armed');armedC=null}},3000);
     }
   }
+});
+
+/* ---------- catálogo para compartir ---------- */
+var K_CAT='taller3d:catalogo';
+var catCfg=Object.assign({titulo:'Catálogo '+(biz.nombre||'BL3D'),bajada:'',whatsapp:''},lsGet(K_CAT)||{});
+function saveCatCfg(){ lsSet(K_CAT,catCfg); pushCatCfg(); }
+function bindCatCfg(){
+  $('cat_titulo').value=catCfg.titulo||'';
+  $('cat_whatsapp').value=catCfg.whatsapp||'';
+  $('cat_bajada').value=catCfg.bajada||'';
+}
+['cat_titulo','cat_whatsapp','cat_bajada'].forEach(function(id){
+  $(id).addEventListener('input',function(){
+    var k=id.replace('cat_','');
+    catCfg[k]=this.value;
+    saveCatCfg();
+  });
+});
+function renderCatalogo(){
+  bindCatCfg();
+  var box=$('catList');
+  if(!piezas.length){ box.innerHTML='<p class="hint">Todavía no guardaste ninguna pieza. Andá a Calculadora, calculá una y tocá "Guardar pieza".</p>'; return; }
+  box.innerHTML=piezas.slice().sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')}).map(function(pz){
+    var foto=pz.catFoto?'<img src="'+pz.catFoto+'" alt="">':'';
+    return '<div class="catitem" data-id="'+pz.id+'"><div class="fotopick">'+
+      (pz.catFoto?'<img src="'+pz.catFoto+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">':'')+
+      '<div class="fotopick-btns"><button class="btn small" type="button" data-cat-foto="1">Elegir foto</button>'+
+      (pz.catFoto?'<button class="btn small danger" type="button" data-cat-foto-del="1">Quitar</button>':'')+
+      '</div></div>'+
+      '<div class="catitem-body"><div class="catitem-top"><strong>'+esc(pz.nombre)+'</strong><span>'+$$(pz.precioUnit)+'</span></div>'+
+      '<label class="vis"><input type="checkbox" data-cat-vis="1"'+(pz.catVisible?' checked':'')+'> Mostrar en el catálogo</label>'+
+      '<textarea data-cat-desc="1" placeholder="Descripción para el cliente (opcional)">'+esc(pz.catDesc||'')+'</textarea>'+
+      '</div></div>';
+  }).join('');
+}
+var catFotoTarget=null;
+$('catList').addEventListener('click',function(e){
+  var id=e.target.closest('[data-id]')&&e.target.closest('[data-id]').dataset.id;
+  if(e.target.closest('[data-cat-foto]')){ catFotoTarget=id; $('cat_fotoInput').click(); }
+  if(e.target.closest('[data-cat-foto-del]')){
+    var pz=piezas.find(function(x){return x.id===id});
+    if(pz){ pz.catFoto=''; savePiezas(); renderCatalogo(); }
+  }
+});
+$('cat_fotoInput').addEventListener('change',function(){
+  var file=this.files[0]; this.value=''; if(!file||!catFotoTarget) return;
+  compressImageFile(file,function(dataUrl){
+    var pz=piezas.find(function(x){return x.id===catFotoTarget});
+    if(pz){ pz.catFoto=dataUrl; savePiezas(); renderCatalogo(); }
+  });
+});
+$('catList').addEventListener('change',function(e){
+  var id=e.target.closest('[data-id]')&&e.target.closest('[data-id]').dataset.id;
+  var pz=piezas.find(function(x){return x.id===id}); if(!pz) return;
+  if(e.target.dataset.catVis!=null){ pz.catVisible=e.target.checked; savePiezas(); }
+  if(e.target.dataset.catDesc!=null){ pz.catDesc=e.target.value; savePiezas(); }
+});
+function buildCatalogHtml(items,cfg){
+  var fecha=new Date().toLocaleDateString('es-AR');
+  var cards=items.map(function(pz){
+    var msg=encodeURIComponent('Hola! Te escribo por "'+pz.nombre+'" del catálogo.');
+    var wa=digits(cfg.whatsapp);
+    var img=pz.catFoto?'<img src="'+pz.catFoto+'" alt="'+esc(pz.nombre)+'">':'<div class="noimg">🖨️</div>';
+    return '<article class="card">'+img+'<div class="cbody"><h3>'+esc(pz.nombre)+'</h3>'+
+      (pz.catDesc?'<p>'+esc(pz.catDesc)+'</p>':'')+
+      '<div class="price">'+$$(pz.precioUnit)+'</div>'+
+      (wa.length>=8?'<a class="wa" href="https://wa.me/'+wa+'?text='+msg+'" target="_blank" rel="noopener">Consultar por WhatsApp</a>':'')+
+      '</div></article>';
+  }).join('');
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'+
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<title>'+esc(cfg.titulo)+'</title>'+
+    '<link rel="icon" type="image/png" href="icon-192.png">'+
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">'+
+    '<style>'+
+    ':root{--bg:#EBEEF1;--surface:#fff;--ink:#16202A;--muted:#5B6875;--line:#D3D9DF;--accent:#7C3AED;'+
+    '--grad1:rgba(34,211,255,.16);--grad2:rgba(183,33,255,.14)}'+
+    '@media(prefers-color-scheme:dark){:root{--bg:#10161C;--surface:#182028;--ink:#E7ECF1;--muted:#95A2B0;--line:#2B3744;--accent:#B388FF;'+
+    '--grad1:rgba(34,211,255,.2);--grad2:rgba(183,33,255,.2)}}'+
+    '*{box-sizing:border-box}body{margin:0;font-family:Figtree,system-ui,sans-serif;color:var(--ink);'+
+    'background:radial-gradient(900px circle at 10% -10%,var(--grad1),transparent 55%),radial-gradient(900px circle at 100% 0%,var(--grad2),transparent 50%),var(--bg);min-height:100vh}'+
+    '.wrap{max-width:980px;margin:0 auto;padding:28px 18px 60px}'+
+    'header{text-align:center;margin-bottom:28px}'+
+    'h1{font-family:"Bricolage Grotesque",sans-serif;font-size:32px;margin:12px 0 6px}'+
+    '.bajada{color:var(--muted);max-width:520px;margin:0 auto}'+
+    '.logo{width:64px;height:64px;border-radius:16px}'+
+    '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}'+
+    '.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}'+
+    '.card img{width:100%;aspect-ratio:1;object-fit:cover}'+
+    '.card .noimg{width:100%;aspect-ratio:1;display:grid;place-items:center;font-size:40px;background:var(--grad1)}'+
+    '.cbody{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}'+
+    '.cbody h3{margin:0;font-size:16px}'+
+    '.cbody p{margin:0;color:var(--muted);font-size:13px;flex:1}'+
+    '.price{font-weight:700;font-size:18px}'+
+    '.wa{margin-top:6px;text-align:center;background:var(--accent);color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:600;font-size:14px}'+
+    'footer{text-align:center;color:var(--muted);font-size:12px;margin-top:40px}'+
+    '</style></head><body><div class="wrap">'+
+    '<header><img class="logo" src="icon-192.png" alt=""><h1>'+esc(cfg.titulo)+'</h1>'+
+    (cfg.bajada?'<p class="bajada">'+esc(cfg.bajada)+'</p>':'')+'</header>'+
+    '<div class="grid">'+cards+'</div>'+
+    '<footer>Actualizado el '+fecha+'</footer>'+
+    '</div></body></html>';
+}
+$('btnGenCatalogo').addEventListener('click',function(){
+  if(!catCfg.titulo.trim()){toast('Ponele un título al catálogo');$('cat_titulo').focus();return}
+  var items=piezas.filter(function(pz){return pz.catVisible});
+  if(!items.length){toast('Marcá "Mostrar en el catálogo" en al menos una pieza');return}
+  var html=buildCatalogHtml(items,catCfg);
+  saveFile('catalogo.html',html);
 });
 
 /* ---------- stock de filamento ---------- */
@@ -1873,7 +2045,16 @@ $('tab-resumen').addEventListener('click',function(e){
   if(sh){sMes=shiftMonth(sMes,+sh.dataset.shift);renderResumen();return}
   if(e.target.closest('[data-now]')){sMes=today().slice(0,7);renderResumen();return}
   var m=e.target.closest('[data-m]');
-  if(m){sMes=m.dataset.m;renderResumen()}
+  if(m){sMes=m.dataset.m;renderResumen();return}
+  if(e.target.closest('#btnExportResumen')){
+    var months=[],i; for(i=11;i>=0;i--) months.push(shiftMonth(sMes,-i));
+    var rows=[['Mes','Ventas','Compras','Resultado']];
+    months.forEach(function(k){
+      var d=monthStats(k);
+      rows.push([mlabel(k),d.ventas,d.compras,d.ventas-d.compras]);
+    });
+    saveFile('resumen-'+sMes+'.csv','\uFEFF'+rows.map(function(r){return r.map(q).join(';')}).join('\r\n'));
+  }
 });
 
 /* ---------- sincronización en la nube (Firebase) ---------- */
@@ -1919,6 +2100,7 @@ var calcT=null;
 function pushCalcNow(){ if(fbUser) cfgDoc('calc').set(JSON.parse(JSON.stringify(c))).catch(syncErr) }
 function pushCalc(){ if(!fbUser) return; clearTimeout(calcT); calcT=setTimeout(pushCalcNow,1200) }
 function pushBiz(){ if(fbUser) cfgDoc('negocio').set({nombre:biz.nombre||'',contacto:biz.contacto||''}).catch(syncErr) }
+function pushCatCfg(){ if(fbUser) cfgDoc('catalogo').set({titulo:catCfg.titulo||'',bajada:catCfg.bajada||'',whatsapp:catCfg.whatsapp||''}).catch(syncErr) }
 function pushNum(n){ if(fbUser) cfgDoc('presupuesto').set({next:n}).catch(syncErr) }
 function pushPiezas(){ if(fbUser) cfgDoc('piezas').set({items:JSON.parse(JSON.stringify(piezas))}).catch(syncErr) }
 function pushBobinas(){ if(fbUser) cfgDoc('stock').set({items:JSON.parse(JSON.stringify(bobinas))}).catch(syncErr) }
@@ -1961,6 +2143,12 @@ function listenCfg(){
     if(snap.metadata.hasPendingWrites) return;
     if(!snap.exists){ if(!snap.metadata.fromCache&&(biz.nombre||biz.contacto)) pushBiz(); return }
     var d=snap.data(); biz={nombre:d.nombre||'',contacto:d.contacto||''}; lsSet(K_BIZ,biz);
+  },syncErr));
+  u.push(cfgDoc('catalogo').onSnapshot(function(snap){
+    if(snap.metadata.hasPendingWrites) return;
+    if(!snap.exists){ if(!snap.metadata.fromCache&&(catCfg.titulo||catCfg.bajada||catCfg.whatsapp)) pushCatCfg(); return }
+    var d=snap.data(); catCfg={titulo:d.titulo||'',bajada:d.bajada||'',whatsapp:d.whatsapp||''}; lsSet(K_CAT,catCfg);
+    if(!$('tab-catalogo').hidden) bindCatCfg();
   },syncErr));
   u.push(cfgDoc('presupuesto').onSnapshot(function(snap){
     if(snap.metadata.hasPendingWrites) return;
@@ -2056,7 +2244,7 @@ function initSync(){
 
 /* ---------- inicio ---------- */
 initSync();
-bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();renderStock();fillBobinaPicker();
+bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();renderStock();fillBobinaPicker();bindCatCfg();
 var deferredInstall=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;$('btnInstall').hidden=false});
 $('btnInstall').addEventListener('click',function(){

@@ -27,6 +27,22 @@ Se usa Firebase, de Google. El plan gratuito (Spark) alcanza de sobra para este 
 
 Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea público. La seguridad la dan las reglas del paso 4 y tu contraseña.
 
+## Nuevo: Catálogo para compartir con clientes
+
+- Pestaña **Catálogo**, nueva. Ahí elegís qué piezas de las que guardaste en la Calculadora mostrar, les ponés foto y una descripción para el cliente (distinta del nombre interno), y configurás el título, la bajada y tu WhatsApp.
+- Botón **"Generar página del catálogo"**: descarga un archivo `catalogo.html`, una página aparte, sin login y sin conexión con la nube, con las piezas que marcaste, sus fotos, precios y un botón "Consultar por WhatsApp" en cada una.
+- Para publicarla: subí ese `catalogo.html` junto a los demás archivos de tu repositorio (mismo paso que con los otros). Te va a quedar en una dirección como `tu-usuario.github.io/tu-repo/catalogo.html`, lista para compartir. No hace falta que el cliente inicie sesión para verla.
+- Cada vez que cambies algo (precio, foto, qué piezas mostrar), volvé a tocar "Generar página del catálogo" y subí el archivo de nuevo para actualizarla.
+
+## Nuevo: "Pasar a pedido" desde un presupuesto
+
+En el diálogo de presupuesto, botón **"Pasar a pedido"**: arma un pedido nuevo con el cliente, la descripción y el total del presupuesto ya cargados (y la seña, si pusiste un %), para no tener que tipear todo de nuevo.
+
+## Nuevo: nota libre por cliente y exportar el resumen
+
+- En la pestaña Clientes, cada tarjeta tiene un campo de **nota** libre (preferencias, medidas que pide siempre, etc.).
+- En Resumen, botón **"Exportar a Excel (CSV)"** para bajar la tabla de los últimos 12 meses y abrirla en Excel o Google Sheets.
+
 ## Nuevo: buscador de clientes, recargar una pieza guardada y autocompletar bobina
 
 - **Buscador en Clientes.** Arriba de la lista, un buscador por nombre o teléfono.
