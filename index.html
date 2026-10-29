@@ -325,6 +325,7 @@ p.sync.off::before{background:var(--danger)}
 .imp .bar i{display:block;height:100%;background:var(--accent)}
 .imp p{margin:4px 0;font-size:14px;color:var(--muted)}
 .imp p b{color:var(--ink)}
+.imp .imp-err{color:#F7B4AF;font-size:13px}
 .pill[data-e="imprimiendo"]{background:var(--st-prep-bg);color:var(--st-prep-fg)}
 .pill[data-e="lista"]{background:var(--st-fin-bg);color:var(--st-fin-fg)}
 .pill[data-e="pausada"]{background:var(--st-ini-bg);color:var(--st-ini-fg)}
@@ -798,7 +799,9 @@ function impTarjeta(id,d){
     '<span class="pill" data-e="'+esc(d.estado||'desconocido')+'">'+esc(d.estado||'desconocido')+'</span></header>'+
     '<div class="bar"><i style="width:'+prog+'%"></i></div>'+
     '<p><b>'+prog+'%</b>'+(d.estado==='imprimiendo'&&rest?' · faltan '+rest+' min':'')+'</p>'+
-    '<p>'+(d.clienteNombre?'Pieza: <b>'+esc(d.clienteNombre)+'</b>':'Sin pieza activa')+'</p>'+
+    '<p>'+(d.pieza?'Pieza: <b>'+esc(d.pieza)+'</b>':'Sin pieza activa')+'</p>'+
+    (d.clienteNombre?'<p>Cliente: <b>'+esc(d.clienteNombre)+'</b></p>':'')+
+    (d.detalle?'<p class="imp-err">'+esc(d.detalle)+'</p>':'')+
     '<p>Actualizado: '+impTiempo(d.actualizado)+'</p>'+
     '</article>';
 }
