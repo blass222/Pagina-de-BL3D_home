@@ -785,7 +785,7 @@ var impSub=null, impUid=null, impDocs={};
 var IMP_ORDEN=['p1s','ender'];
 function impTiempo(ts){
   if(!ts||!ts.toDate) return 'sin datos';
-  var s=Math.round((Date.now()-ts.toDate().getTime())/1000);
+  var s=Math.max(0,Math.round((Date.now()-ts.toDate().getTime())/1000));
   if(s<60) return 'hace '+s+' s';
   if(s<3600) return 'hace '+Math.round(s/60)+' min';
   return 'hace '+Math.round(s/3600)+' h';
