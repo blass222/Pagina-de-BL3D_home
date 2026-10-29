@@ -317,7 +317,19 @@ p.sync.busy::before{background:var(--c4)}
 p.sync.off::before{background:var(--danger)}
 .head-title{display:flex;align-items:center;gap:8px}
 .theme-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;color:var(--muted)}
-.theme-btn:hover{border-color:var(--muted);color:var(--ink)}
+.theme-btn:hover{border-color:var(--muted);color:var(--ink)}.imp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.imp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.imp header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.imp .imp-name{font-weight:700;font-size:17px}
+.imp .bar{height:10px;background:var(--line);border-radius:999px;overflow:hidden;margin:10px 0 6px}
+.imp .bar i{display:block;height:100%;background:var(--accent)}
+.imp p{margin:4px 0;font-size:14px;color:var(--muted)}
+.imp p b{color:var(--ink)}
+.pill[data-e="imprimiendo"]{background:var(--st-prep-bg);color:var(--st-prep-fg)}
+.pill[data-e="lista"]{background:var(--st-fin-bg);color:var(--st-fin-fg)}
+.pill[data-e="pausada"]{background:var(--st-ini-bg);color:var(--st-ini-fg)}
+.pill[data-e="error"]{background:#5A2422;color:#F7B4AF}
+.pill[data-e="apagada"],.pill[data-e="desconocido"]{background:var(--line);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -336,6 +348,7 @@ p.sync.off::before{background:var(--danger)}
     </div>
     <nav class="tabs" role="tablist" aria-label="Secciones">
       <button role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
+      <button role="tab" data-tab="impresoras" aria-selected="false">Impresoras</button>
       <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
       <button role="tab" data-tab="compras" aria-selected="false">Compras</button>
       <button role="tab" data-tab="stock" aria-selected="false">Stock</button>
@@ -365,6 +378,15 @@ p.sync.off::before{background:var(--danger)}
       <button class="btn small" id="btnLogout" hidden>Cerrar sesión</button>
       <input type="file" id="fileRestore" accept="application/json,.json" hidden>
     </div>
+  </section>
+
+  <!-- IMPRESORAS -->
+  <section id="tab-impresoras" hidden>
+    <div class="toolbar">
+      <h2 style="margin:0">Impresoras</h2>
+      <span class="sub" id="impStatus" style="margin:0"></span>
+    </div>
+    <div class="imp-grid" id="impGrid"></div>
   </section>
 
   <!-- CLIENTES -->
@@ -758,15 +780,67 @@ function digits(t){return String(t||'').replace(/\D/g,'')}
 var toastT;
 function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2800)}
 
+/* ---------- impresoras (estado en vivo desde el agente) ---------- */
+var impSub=null, impUid=null, impDocs={};
+var IMP_ORDEN=['p1s','ender'];
+function impTiempo(ts){
+  if(!ts||!ts.toDate) return 'sin datos';
+  var s=Math.round((Date.now()-ts.toDate().getTime())/1000);
+  if(s<60) return 'hace '+s+' s';
+  if(s<3600) return 'hace '+Math.round(s/60)+' min';
+  return 'hace '+Math.round(s/3600)+' h';
+}
+function impTarjeta(id,d){
+  var prog=Math.max(0,Math.min(100,Number(d.progreso)||0));
+  var rest=Number(d.tiempoRestante)||0;
+  return '<article class="imp">'+
+    '<header><span class="imp-name">'+esc(d.nombre||id)+'</span>'+
+    '<span class="pill" data-e="'+esc(d.estado||'desconocido')+'">'+esc(d.estado||'desconocido')+'</span></header>'+
+    '<div class="bar"><i style="width:'+prog+'%"></i></div>'+
+    '<p><b>'+prog+'%</b>'+(d.estado==='imprimiendo'&&rest?' · faltan '+rest+' min':'')+'</p>'+
+    '<p>'+(d.clienteNombre?'Pieza: <b>'+esc(d.clienteNombre)+'</b>':'Sin pieza activa')+'</p>'+
+    '<p>Actualizado: '+impTiempo(d.actualizado)+'</p>'+
+    '</article>';
+}
+function pintarImpresoras(){
+  var g=$('impGrid'), st=$('impStatus');
+  var ids=IMP_ORDEN.filter(function(i){return impDocs[i]}).concat(
+    Object.keys(impDocs).filter(function(i){return IMP_ORDEN.indexOf(i)<0}));
+  if(!ids.length){
+    g.innerHTML='<p class="sub">Todavía no llegaron datos del agente. Revisá que esté corriendo.</p>';
+    st.textContent=''; return;
+  }
+  g.innerHTML=ids.map(function(id){return impTarjeta(id,impDocs[id])}).join('');
+  st.textContent='En vivo';
+}
+function renderImpresoras(){
+  var g=$('impGrid'), st=$('impStatus');
+  if(!fbUser){
+    impUid=null; if(impSub){impSub(); impSub=null} impDocs={};
+    g.innerHTML='<p class="sub">Iniciá sesión para ver las impresoras.</p>'; st.textContent=''; return;
+  }
+  if(impUid!==fbUser.uid){
+    if(impSub) impSub();
+    impDocs={}; impUid=fbUser.uid;
+    impSub=uDoc().collection('impresoras').onSnapshot(function(snap){
+      impDocs={}; snap.forEach(function(d){impDocs[d.id]=d.data()}); pintarImpresoras();
+    },function(e){ st.textContent='Sin permiso para leer las impresoras'; syncErr(e); });
+    fbUnsubs.push(impSub);
+  }
+  pintarImpresoras();
+}
+setInterval(function(){ if($('tab-impresoras') && !$('tab-impresoras').hidden) pintarImpresoras() },15000);
+
 /* ---------- pestañas ---------- */
 function setTab(name){
-  ['pedidos','clientes','compras','stock','resumen','calc','catalogo'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
+  ['pedidos','impresoras','clientes','compras','stock','resumen','calc','catalogo'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
   document.querySelectorAll('nav.tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.tab===name))});
   if(name==='clientes') renderClients();
   if(name==='compras') renderCompras();
   if(name==='stock') renderStock();
   if(name==='resumen') renderResumen();
   if(name==='catalogo') renderCatalogo();
+  if(name==='impresoras') renderImpresoras();
 }
 document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab)})});
 
@@ -1791,50 +1865,76 @@ $('catList').addEventListener('change',function(e){
 });
 function buildCatalogHtml(items,cfg){
   var fecha=new Date().toLocaleDateString('es-AR');
-  var cards=items.map(function(pz){
+  var wa=digits(cfg.whatsapp);
+  var cards=items.map(function(pz,i){
     var msg=encodeURIComponent('Hola! Te escribo por "'+pz.nombre+'" del catálogo.');
-    var wa=digits(cfg.whatsapp);
-    var img=pz.catFoto?'<img src="'+pz.catFoto+'" alt="'+esc(pz.nombre)+'">':'<div class="noimg">🖨️</div>';
-    return '<article class="card">'+img+'<div class="cbody"><h3>'+esc(pz.nombre)+'</h3>'+
-      (pz.catDesc?'<p>'+esc(pz.catDesc)+'</p>':'')+
-      '<div class="price">'+$$(pz.precioUnit)+'</div>'+
-      (wa.length>=8?'<a class="wa" href="https://wa.me/'+wa+'?text='+msg+'" target="_blank" rel="noopener">Consultar por WhatsApp</a>':'')+
+    var media=pz.catFoto?'<img src="'+pz.catFoto+'" alt="'+esc(pz.nombre)+'" loading="lazy">':'<div class="noimg">🖨️</div>';
+    return '<article class="card" style="--i:'+i+'">'+
+      '<div class="media">'+media+'<span class="tag">'+$$(pz.precioUnit)+'</span></div>'+
+      '<div class="cbody"><h3>'+esc(pz.nombre)+'</h3>'+
+      (pz.catDesc?'<p>'+esc(pz.catDesc)+'</p>':'<p class="muted-fill"></p>')+
+      (wa.length>=8?'<a class="wa-btn" href="https://wa.me/'+wa+'?text='+msg+'" target="_blank" rel="noopener">Consultar por WhatsApp</a>':'')+
       '</div></article>';
   }).join('');
+  var fab=wa.length>=8?'<a class="fab" href="https://wa.me/'+wa+'?text='+encodeURIComponent('Hola! Vi tu catálogo y quería consultarte.')+'" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp">💬</a>':'';
   return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'+
     '<meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<meta name="theme-color" content="#0B0E1A">'+
     '<title>'+esc(cfg.titulo)+'</title>'+
-    '<link rel="icon" type="image/png" href="icon-192.png">'+
+    '<link rel="icon" type="image/png" href="'+LOGO+'">'+
     '<link rel="preconnect" href="https://fonts.googleapis.com">'+
     '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">'+
     '<style>'+
-    ':root{--bg:#EBEEF1;--surface:#fff;--ink:#16202A;--muted:#5B6875;--line:#D3D9DF;--accent:#7C3AED;'+
-    '--grad1:rgba(34,211,255,.16);--grad2:rgba(183,33,255,.14)}'+
-    '@media(prefers-color-scheme:dark){:root{--bg:#10161C;--surface:#182028;--ink:#E7ECF1;--muted:#95A2B0;--line:#2B3744;--accent:#B388FF;'+
-    '--grad1:rgba(34,211,255,.2);--grad2:rgba(183,33,255,.2)}}'+
-    '*{box-sizing:border-box}body{margin:0;font-family:Figtree,system-ui,sans-serif;color:var(--ink);'+
-    'background:radial-gradient(900px circle at 10% -10%,var(--grad1),transparent 55%),radial-gradient(900px circle at 100% 0%,var(--grad2),transparent 50%),var(--bg);min-height:100vh}'+
-    '.wrap{max-width:980px;margin:0 auto;padding:28px 18px 60px}'+
-    'header{text-align:center;margin-bottom:28px}'+
-    'h1{font-family:"Bricolage Grotesque",sans-serif;font-size:32px;margin:12px 0 6px}'+
-    '.bajada{color:var(--muted);max-width:520px;margin:0 auto}'+
-    '.logo{width:64px;height:64px;border-radius:16px}'+
-    '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}'+
-    '.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}'+
-    '.card img{width:100%;aspect-ratio:1;object-fit:cover}'+
-    '.card .noimg{width:100%;aspect-ratio:1;display:grid;place-items:center;font-size:40px;background:var(--grad1)}'+
-    '.cbody{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}'+
-    '.cbody h3{margin:0;font-size:16px}'+
-    '.cbody p{margin:0;color:var(--muted);font-size:13px;flex:1}'+
-    '.price{font-weight:700;font-size:18px}'+
-    '.wa{margin-top:6px;text-align:center;background:var(--accent);color:#fff;text-decoration:none;padding:9px;border-radius:9px;font-weight:600;font-size:14px}'+
-    'footer{text-align:center;color:var(--muted);font-size:12px;margin-top:40px}'+
+    ':root{--bg:#0B0E1A;--surface:#141A29;--ink:#F3F5F9;--muted:#93A0B8;--line:#232B40;'+
+    '--brand-a:#22D3FF;--brand-b:#B721FF;--btn-a:#7C3AED;--btn-b:#B721FF}'+
+    '*{box-sizing:border-box}'+
+    'body{margin:0;font-family:Figtree,system-ui,sans-serif;color:var(--ink);'+
+    'background:radial-gradient(1000px circle at 12% -12%,rgba(34,211,255,.22),transparent 55%),'+
+    'radial-gradient(900px circle at 105% 6%,rgba(183,33,255,.22),transparent 50%),var(--bg);min-height:100vh}'+
+    '.wrap{max-width:1040px;margin:0 auto;padding:40px 20px 70px}'+
+    'header{text-align:center;margin-bottom:36px}'+
+    '.logo-wrap{position:relative;width:84px;height:84px;margin:0 auto 16px}'+
+    '.logo-wrap::before{content:"";position:absolute;inset:-16px;border-radius:50%;filter:blur(8px);'+
+    'background:radial-gradient(circle,rgba(34,211,255,.4),rgba(183,33,255,.28) 60%,transparent 75%)}'+
+    '.logo{position:relative;width:84px;height:84px;border-radius:20px;display:block;box-shadow:0 10px 28px rgba(0,0,0,.45)}'+
+    'h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(30px,6vw,48px);margin:0 0 10px;'+
+    'letter-spacing:-.02em;line-height:1.05;color:#fff;background:linear-gradient(120deg,var(--brand-a),var(--brand-b));'+
+    '-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}'+
+    '.bajada{color:var(--muted);max-width:480px;margin:0 auto;line-height:1.5;font-size:15px}'+
+    '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:22px}'+
+    '.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;'+
+    'transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}'+
+    '.card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(0,0,0,.4);border-color:rgba(183,33,255,.4)}'+
+    '.media{position:relative;overflow:hidden}'+
+    '.media img,.media .noimg{display:block;width:100%;aspect-ratio:1;object-fit:cover;transition:transform .4s ease}'+
+    '.card:hover .media img{transform:scale(1.05)}'+
+    '.noimg{display:grid;place-items:center;font-size:40px;background:linear-gradient(135deg,rgba(34,211,255,.18),rgba(183,33,255,.18))}'+
+    '.tag{position:absolute;top:12px;right:-6px;transform:rotate(-6deg);background:#FBF4E4;color:#241a12;'+
+    'padding:6px 14px 6px 18px;border-radius:3px 10px 10px 3px;font-weight:700;font-size:14px;'+
+    'font-family:"Bricolage Grotesque",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.4)}'+
+    '.tag::before{content:"";position:absolute;left:7px;top:50%;transform:translateY(-50%);width:5px;height:5px;'+
+    'border-radius:50%;background:var(--surface)}'+
+    '.cbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}'+
+    '.cbody h3{margin:0;font-size:16px;font-weight:600}'+
+    '.cbody p{margin:0;color:var(--muted);font-size:13px;line-height:1.4;flex:1}'+
+    '.wa-btn{margin-top:8px;text-align:center;background:linear-gradient(120deg,var(--btn-a),var(--btn-b));color:#fff;'+
+    'text-decoration:none;padding:10px;border-radius:11px;font-weight:600;font-size:14px;transition:filter .2s ease}'+
+    '.wa-btn:hover{filter:brightness(1.12)}'+
+    '.fab{position:fixed;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;z-index:5;'+
+    'background:linear-gradient(135deg,var(--btn-a),var(--btn-b));display:grid;place-items:center;font-size:26px;'+
+    'text-decoration:none;box-shadow:0 10px 26px rgba(183,33,255,.5)}'+
+    'footer{text-align:center;color:var(--muted);font-size:12px;margin-top:52px;padding-top:20px;border-top:1px solid var(--line)}'+
+    '@media(prefers-reduced-motion:no-preference){'+
+    '@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}'+
+    'header{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}'+
+    '.card{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*70ms + .12s)}'+
+    '}'+
     '</style></head><body><div class="wrap">'+
-    '<header><img class="logo" src="icon-192.png" alt=""><h1>'+esc(cfg.titulo)+'</h1>'+
+    '<header><div class="logo-wrap"><img class="logo" src="'+LOGO+'" alt=""></div><h1>'+esc(cfg.titulo)+'</h1>'+
     (cfg.bajada?'<p class="bajada">'+esc(cfg.bajada)+'</p>':'')+'</header>'+
     '<div class="grid">'+cards+'</div>'+
     '<footer>Actualizado el '+fecha+'</footer>'+
-    '</div></body></html>';
+    '</div>'+fab+'</body></html>';
 }
 $('btnGenCatalogo').addEventListener('click',function(){
   if(!catCfg.titulo.trim()){toast('Ponele un título al catálogo');$('cat_titulo').focus();return}
