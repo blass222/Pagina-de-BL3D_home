@@ -216,7 +216,8 @@ dialog::backdrop{background:rgba(10,15,20,.55)}
   .o-actions select.estado{flex:1 1 100%}
   .o-actions .btn{flex:1 1 auto}
   .sep{display:none}
-  header.top nav.tabs{display:none}
+  header.top nav.tabs{display:grid;grid-template-columns:repeat(3,1fr);overflow:visible;width:100%}
+  nav.tabs button{padding:10px 4px;text-align:center}
 }
 .ins-row button{border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;color:var(--muted)}
 .result{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
@@ -316,55 +317,42 @@ p.sync.busy::before{background:var(--c4)}
 p.sync.off::before{background:var(--danger)}
 .head-title{display:flex;align-items:center;gap:8px}
 .theme-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;color:var(--muted)}
-.theme-btn:hover{border-color:var(--muted);color:var(--ink)}
-
-/* ---- Inicio ---- */
-.home-head{margin-bottom:14px}
-.home-title{font:700 24px/1.15 var(--head);margin:0}
-.hstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.hstat{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;transition:transform .15s ease,border-color .15s ease}
-.hstat:hover{transform:translateY(-2px);border-color:var(--accent)}
-.hstat .hl{color:var(--muted);font-size:13px;font-weight:600}
-.hstat .hv{font:700 28px/1.1 var(--head);letter-spacing:-.02em}
-.hstat .hs{color:var(--muted);font-size:12px}
-.hstat.alert{border-color:var(--danger)}
-.hstat.alert .hv{color:var(--danger)}
-.hstat.warn .hv{color:var(--st-prep-fg)}
-.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.hgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
-.hgrid>.panel{min-width:0}
-.hgrid>.panel+.panel{margin-top:0}
-.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
-.panel-head h3{margin:0}
-.hrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
-.hrow:hover{border-color:var(--accent)}
-.hrow .hm{min-width:0}
-.hrow .hm strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hrow .hm span{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hchip{flex:none;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;background:var(--st-prep-bg);color:var(--st-prep-fg);white-space:nowrap}
-.hchip.late,.hchip.low{background:#FDE2E1;color:#9A2A25}
-:root[data-theme="dark"] .hchip.late,:root[data-theme="dark"] .hchip.low{background:#5A2422;color:#F7B4AF}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hchip.late,:root:not([data-theme="light"]) .hchip.low{background:#5A2422;color:#F7B4AF}}
-.hempty{color:var(--muted);font-size:14px;margin:4px 0}
-/* ---- barra inferior (celular) ---- */
-.bnav{display:none;position:fixed;z-index:30;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);grid-template-columns:repeat(5,1fr);gap:4px;padding:6px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(10,15,30,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.bnav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;min-width:0}
-.bnav .bi{font-size:19px;line-height:1}
-.bnav button[aria-current="true"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
-.bnav .bn-plus,.bnav .bn-plus[aria-current="true"]{color:var(--accent-ink);background:var(--accent)}
-.bnav .bn-plus .bi{font-size:21px}
-dialog.sheet{margin:auto auto 0;width:100%;max-width:560px;border-radius:20px 20px 0 0}
-dialog.sheet .dlg{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
-.sheetbtn{width:100%;justify-content:flex-start;text-align:left;font-size:16px;padding:12px 14px}
-@media (max-width:720px){
-  .bnav{display:grid}
-  .wrap{padding-bottom:104px}
-  .toast{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)}
-  .hgrid{grid-template-columns:minmax(0,1fr)}
-  .hstat{padding:12px 13px}
-  .hstat .hv{font-size:23px}
-  .hstat .hs{font-size:11px}
+.theme-btn:hover{border-color:var(--muted);color:var(--ink)}.imp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.imp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.imp header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.imp .imp-name{font-weight:700;font-size:17px}
+.imp .bar{height:10px;background:var(--line);border-radius:999px;overflow:hidden;margin:10px 0 6px}
+.imp .bar i{display:block;height:100%;background:var(--accent)}
+.imp p{margin:4px 0;font-size:14px;color:var(--muted)}
+.imp p b{color:var(--ink)}
+.imp .imp-err{color:#F7B4AF;font-size:13px}
+.pill[data-e="imprimiendo"]{background:var(--st-prep-bg);color:var(--st-prep-fg)}
+.pill[data-e="lista"]{background:var(--st-fin-bg);color:var(--st-fin-fg)}
+.pill[data-e="pausada"]{background:var(--st-ini-bg);color:var(--st-ini-fg)}
+.pill[data-e="error"]{background:#5A2422;color:#F7B4AF}
+.pill[data-e="apagada"],.pill[data-e="desconocido"]{background:var(--line);color:var(--muted)}
+/* ---------- refinamiento visual (minimalista) ---------- */
+:root{--shadow:0 1px 2px rgba(22,32,42,.05),0 10px 24px -16px rgba(22,32,42,.28)}
+h1,h2,h3{letter-spacing:-.01em}
+.order,.spool,.client,.imp{border-radius:16px}
+.o-thumb{border-radius:12px}
+.pill{letter-spacing:.01em}
+nav.tabs{box-shadow:0 1px 2px rgba(22,32,42,.04)}
+nav.tabs button[aria-selected="true"]{box-shadow:0 4px 12px -6px rgba(124,58,237,.55)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,.btn:focus-visible,.chip:focus-visible,nav.tabs button:focus-visible,.order button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: no-preference){
+  section:not([hidden]){animation:bl-in .35s cubic-bezier(.2,.7,.2,1) both}
+  .order,.spool,.client,.imp{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+  .order:hover,.spool:hover,.client:hover,.imp:hover{transform:translateY(-2px);box-shadow:0 14px 28px -18px rgba(22,32,42,.35)}
+  .btn,.chip,nav.tabs button{transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .15s ease,box-shadow .2s ease}
+  .btn:active,.chip:active{transform:scale(.97)}
 }
+@keyframes bl-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* pestañas con íconos */
+nav.tabs{justify-content:center;overflow-x:auto}
+nav.tabs button{display:inline-flex;align-items:center;justify-content:center;min-width:46px;min-height:42px;padding:8px 12px}
+nav.tabs button svg{display:block}
+header.top nav.tabs{display:flex;grid-template-columns:none}
 </style>
 </head>
 <body>
@@ -382,42 +370,19 @@ dialog.sheet .dlg{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
       </div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Secciones">
-      <button role="tab" data-tab="inicio" aria-selected="true">Inicio</button>
-      <button role="tab" data-tab="pedidos" aria-selected="false">Pedidos</button>
-      <button role="tab" data-tab="clientes" aria-selected="false">Clientes</button>
-      <button role="tab" data-tab="compras" aria-selected="false">Compras</button>
-      <button role="tab" data-tab="stock" aria-selected="false">Stock</button>
-      <button role="tab" data-tab="resumen" aria-selected="false">Resumen</button>
-      <button role="tab" data-tab="calc" aria-selected="false">Calculadora</button>
-      <button role="tab" data-tab="catalogo" aria-selected="false">Catálogo</button>
+      <button role="tab" data-tab="pedidos" aria-selected="true" aria-label="Pedidos" title="Pedidos"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 4h6a2 2 0 0 1 2 2v1H7V6a2 2 0 0 1 2-2z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h4"/></svg></button>
+      <button role="tab" data-tab="impresoras" aria-selected="false" aria-label="Impresoras" title="Impresoras"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="6" y="3" width="12" height="6" rx="1"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg></button>
+      <button role="tab" data-tab="clientes" aria-selected="false" aria-label="Clientes" title="Clientes"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6 6 0 0 0-2.5-4.9"/></svg></button>
+      <button role="tab" data-tab="compras" aria-selected="false" aria-label="Compras" title="Compras"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></button>
+      <button role="tab" data-tab="stock" aria-selected="false" aria-label="Stock" title="Stock"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3.5v3M12 17.5v3"/></svg></button>
+      <button role="tab" data-tab="resumen" aria-selected="false" aria-label="Resumen" title="Resumen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+      <button role="tab" data-tab="calc" aria-selected="false" aria-label="Calculadora" title="Calculadora"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7.5h7M8.5 12h1M12 12h1M15.5 12h1M8.5 16h1M12 16h1M15.5 16h1"/></svg></button>
+      <button role="tab" data-tab="catalogo" aria-selected="false" aria-label="Catálogo" title="Catálogo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button>
     </nav>
   </header>
 
-  <!-- INICIO -->
-  <section id="tab-inicio">
-    <div class="home-head">
-      <div><h2 id="hGreeting" class="home-title"></h2><p class="sub" id="hSub"></p></div>
-    </div>
-    <div class="hstats" id="hStats"></div>
-    <div class="quick">
-      <button class="btn primary" data-quick="pedido">＋ Nuevo pedido</button>
-      <button class="btn" data-quick="cobrar">Cobrar saldos</button>
-      <button class="btn" data-quick="impresion">Registrar impresión</button>
-    </div>
-    <div class="hgrid">
-      <div class="panel">
-        <div class="panel-head"><h3>Próximas entregas</h3><button class="btn small" data-go="pedidos">Ver pedidos</button></div>
-        <div id="hEntregas"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h3>Stock bajo</h3><button class="btn small" data-go="stock">Ver stock</button></div>
-        <div id="hStock"></div>
-      </div>
-    </div>
-  </section>
-
   <!-- PEDIDOS -->
-  <section id="tab-pedidos" hidden>
+  <section id="tab-pedidos">
     <div class="toolbar">
       <button class="btn primary" id="btnNuevo">Nuevo pedido</button>
       <button class="btn" id="btnNuevoP">Nuevo presupuesto</button>
@@ -436,6 +401,15 @@ dialog.sheet .dlg{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
       <button class="btn small" id="btnLogout" hidden>Cerrar sesión</button>
       <input type="file" id="fileRestore" accept="application/json,.json" hidden>
     </div>
+  </section>
+
+  <!-- IMPRESORAS -->
+  <section id="tab-impresoras" hidden>
+    <div class="toolbar">
+      <h2 style="margin:0">Impresoras</h2>
+      <span class="sub" id="impStatus" style="margin:0"></span>
+    </div>
+    <div class="imp-grid" id="impGrid"></div>
   </section>
 
   <!-- CLIENTES -->
@@ -765,38 +739,6 @@ dialog.sheet .dlg{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
   </form>
 </div>
 
-<nav class="bnav" id="bnav" aria-label="Navegación">
-  <button data-bn="inicio"><span class="bi">⌂</span>Inicio</button>
-  <button data-bn="pedidos"><span class="bi">▤</span>Pedidos</button>
-  <button class="bn-plus" data-bn="plus" aria-label="Agregar"><span class="bi">＋</span>Agregar</button>
-  <button data-bn="stock"><span class="bi">▦</span>Stock</button>
-  <button data-bn="mas"><span class="bi">⋯</span>Más</button>
-</nav>
-
-<dialog id="dlgQuick" class="sheet">
-  <div class="dlg">
-    <h2>Agregar</h2>
-    <button class="btn sheetbtn" data-quick="pedido">Nuevo pedido</button>
-    <button class="btn sheetbtn" data-quick="presupuesto">Nuevo presupuesto</button>
-    <button class="btn sheetbtn" data-quick="compra">Registrar compra</button>
-    <button class="btn sheetbtn" data-quick="impresion">Registrar impresión</button>
-    <button class="btn sheetbtn" data-quick="cobrar">Cobrar saldos</button>
-    <div class="actions"><button class="btn" data-close="dlgQuick">Cerrar</button></div>
-  </div>
-</dialog>
-
-<dialog id="dlgMore" class="sheet">
-  <div class="dlg">
-    <h2>Más secciones</h2>
-    <button class="btn sheetbtn" data-go="clientes">Clientes</button>
-    <button class="btn sheetbtn" data-go="compras">Compras</button>
-    <button class="btn sheetbtn" data-go="resumen">Resumen</button>
-    <button class="btn sheetbtn" data-go="calc">Calculadora</button>
-    <button class="btn sheetbtn" data-go="catalogo">Catálogo</button>
-    <div class="actions"><button class="btn" data-close="dlgMore">Cerrar</button></div>
-  </div>
-</dialog>
-
 <div class="toast" id="toast" hidden></div>
 
 <script src="firebase-config.js"></script>
@@ -861,95 +803,71 @@ function digits(t){return String(t||'').replace(/\D/g,'')}
 var toastT;
 function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2800)}
 
+/* ---------- impresoras (estado en vivo desde el agente) ---------- */
+var impSub=null, impUid=null, impDocs={};
+var IMP_ORDEN=['p1s','ender'];
+function impTiempo(ts){
+  if(!ts||!ts.toDate) return 'sin datos';
+  var s=Math.max(0,Math.round((Date.now()-ts.toDate().getTime())/1000));
+  if(s<60) return 'hace '+s+' s';
+  if(s<3600) return 'hace '+Math.round(s/60)+' min';
+  return 'hace '+Math.round(s/3600)+' h';
+}
+function impTarjeta(id,d){
+  var prog=Math.max(0,Math.min(100,Number(d.progreso)||0));
+  var rest=Number(d.tiempoRestante)||0;
+  return '<article class="imp">'+
+    '<header><span class="imp-name">'+esc(d.nombre||id)+'</span>'+
+    '<span class="pill" data-e="'+esc(d.estado||'desconocido')+'">'+esc(d.estado||'desconocido')+'</span></header>'+
+    '<div class="bar"><i style="width:'+prog+'%"></i></div>'+
+    '<p><b>'+prog+'%</b>'+(d.estado==='imprimiendo'&&rest?' · faltan '+rest+' min':'')+'</p>'+
+    '<p>'+(d.pieza?'Pieza: <b>'+esc(d.pieza)+'</b>':'Sin pieza activa')+'</p>'+
+    (d.clienteNombre?'<p>Cliente: <b>'+esc(d.clienteNombre)+'</b></p>':'')+
+    (d.detalle?'<p class="imp-err">'+esc(d.detalle)+'</p>':'')+
+    '<p>Actualizado: '+impTiempo(d.actualizado)+'</p>'+
+    '</article>';
+}
+function pintarImpresoras(){
+  var g=$('impGrid'), st=$('impStatus');
+  var ids=IMP_ORDEN.filter(function(i){return impDocs[i]}).concat(
+    Object.keys(impDocs).filter(function(i){return IMP_ORDEN.indexOf(i)<0}));
+  if(!ids.length){
+    g.innerHTML='<p class="sub">Todavía no llegaron datos del agente. Revisá que esté corriendo.</p>';
+    st.textContent=''; return;
+  }
+  g.innerHTML=ids.map(function(id){return impTarjeta(id,impDocs[id])}).join('');
+  st.textContent='En vivo';
+}
+function renderImpresoras(){
+  var g=$('impGrid'), st=$('impStatus');
+  if(!fbUser){
+    impUid=null; if(impSub){impSub(); impSub=null} impDocs={};
+    g.innerHTML='<p class="sub">Iniciá sesión para ver las impresoras.</p>'; st.textContent=''; return;
+  }
+  if(impUid!==fbUser.uid){
+    if(impSub) impSub();
+    impDocs={}; impUid=fbUser.uid;
+    impSub=uDoc().collection('impresoras').onSnapshot(function(snap){
+      impDocs={}; snap.forEach(function(d){impDocs[d.id]=d.data()}); pintarImpresoras();
+    },function(e){ st.textContent='Sin permiso para leer las impresoras'; syncErr(e); });
+    fbUnsubs.push(impSub);
+  }
+  pintarImpresoras();
+}
+setInterval(function(){ if($('tab-impresoras') && !$('tab-impresoras').hidden) pintarImpresoras() },15000);
+
 /* ---------- pestañas ---------- */
 function setTab(name){
-  ['inicio','pedidos','clientes','compras','stock','resumen','calc','catalogo'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
+  ['pedidos','impresoras','clientes','compras','stock','resumen','calc','catalogo'].forEach(function(n){$('tab-'+n).hidden=(n!==name)});
   document.querySelectorAll('nav.tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.tab===name))});
-  var MAS=['clientes','compras','resumen','calc','catalogo'];
-  document.querySelectorAll('#bnav button').forEach(function(b){
-    var k=b.dataset.bn, on=(k===name)||(k==='mas'&&MAS.indexOf(name)>-1);
-    b.setAttribute('aria-current',on?'true':'false');
-  });
-  if(name==='inicio') renderInicio();
   if(name==='clientes') renderClients();
   if(name==='compras') renderCompras();
   if(name==='stock') renderStock();
   if(name==='resumen') renderResumen();
   if(name==='catalogo') renderCatalogo();
+  if(name==='impresoras') renderImpresoras();
 }
 document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab)})});
-
-/* ---------- inicio ---------- */
-function diasHasta(f){var a=new Date(today()+'T00:00:00'),b=new Date(f+'T00:00:00');return Math.round((b-a)/86400000)}
-function saludo(){var h=new Date().getHours();return h<6?'Buenas noches':h<13?'Buen día':h<20?'Buenas tardes':'Buenas noches'}
-function entregaChip(o){
-  var d=diasHasta(o.entrega);
-  if(d<0) return {t:'Atrasado '+(-d)+' d',c:'late'};
-  if(d===0) return {t:'Hoy',c:''};
-  if(d===1) return {t:'Mañana',c:''};
-  return {t:fdate(o.entrega).slice(0,5),c:''};
-}
-function renderInicio(){
-  if(!$('hStats')) return;
-  var atr=orders.filter(atrasado);
-  var pend=orders.filter(function(o){return o.estado!=='Entregado'&&o.entrega});
-  var sem=pend.filter(function(o){var d=diasHasta(o.entrega);return d>=0&&d<=7}).sort(function(a,b){return a.entrega.localeCompare(b.entrega)});
-  var deben=orders.filter(function(o){return saldo(o)>0});
-  var totalSaldo=deben.reduce(function(s,o){return s+saldo(o)},0);
-  var bajas=bobinas.filter(bajoStock).sort(function(a,b){return num(a.restante)-num(b.restante)});
-  $('hGreeting').textContent=saludo();
-  $('hSub').textContent=atr.length?('Tenés '+atr.length+(atr.length===1?' pedido atrasado.':' pedidos atrasados.')):
-    (sem.length?(sem.length+(sem.length===1?' entrega':' entregas')+' en los próximos 7 días.'):'Todo al día por ahora.');
-  var prox='Sin entregas próximas';
-  if(sem.length){var d0=diasHasta(sem[0].entrega);prox='Próxima: '+(d0===0?'hoy':d0===1?'mañana':'en '+d0+' días')}
-  $('hStats').innerHTML=
-    '<button class="hstat'+(atr.length?' alert':'')+'" data-hgo="atrasados"><span class="hl">Pedidos atrasados</span><span class="hv">'+atr.length+'</span><span class="hs">'+(atr.length?'Revisá las fechas de entrega':'Ninguno, bien ahí')+'</span></button>'+
-    '<button class="hstat" data-hgo="semana"><span class="hl">Entregas esta semana</span><span class="hv">'+sem.length+'</span><span class="hs">'+prox+'</span></button>'+
-    '<button class="hstat" data-hgo="saldo"><span class="hl">Saldo por cobrar</span><span class="hv">'+$$(totalSaldo)+'</span><span class="hs">'+(deben.length?('De '+deben.length+(deben.length===1?' pedido':' pedidos')):'Nada pendiente')+'</span></button>'+
-    '<button class="hstat'+(bajas.length?' warn':'')+'" data-hgo="stock"><span class="hl">Stock bajo</span><span class="hv">'+bajas.length+(bajas.length===1?' bobina':' bobinas')+'</span><span class="hs">'+(bajas.length?'Conviene reponer':(bobinas.length?'Todo en orden':'Todavía sin bobinas'))+'</span></button>';
-  var lista=pend.slice().sort(function(a,b){return a.entrega.localeCompare(b.entrega)}).slice(0,5);
-  $('hEntregas').innerHTML=lista.length?lista.map(function(o){
-    var ch=entregaChip(o), sd=saldo(o);
-    return '<button class="hrow" data-oid="'+o.id+'"><span class="hm"><strong>'+esc(o.nombre||'Sin nombre')+' · '+esc((o.desc||'Sin descripción').slice(0,40))+'</strong><span>'+esc(o.estado)+(sd>0?' · Saldo '+$$(sd):'')+'</span></span><span class="hchip'+(ch.c?' '+ch.c:'')+'">'+ch.t+'</span></button>';
-  }).join(''):'<p class="hempty">'+(orders.length?'No hay pedidos pendientes con fecha de entrega. Podés cargarla al crear o editar un pedido.':'Todavía no cargaste pedidos.')+'</p>';
-  $('hStock').innerHTML=bajas.length?bajas.slice(0,5).map(function(b){
-    return '<button class="hrow" data-stk="1"><span class="hm"><strong>'+esc(b.nombre)+'</strong><span>Quedan '+Math.round(b.restante)+' g de '+Math.round(b.total)+' g</span></span><span class="hchip low">Poco stock</span></button>';
-  }).join(''):'<p class="hempty">'+(bobinas.length?'Todas las bobinas tienen stock suficiente.':'Todavía no cargaste bobinas.')+'</p>';
-}
-$('hEntregas').addEventListener('click',function(e){var r=e.target.closest('[data-oid]');if(r) openDialog(r.dataset.oid)});
-$('hStock').addEventListener('click',function(e){if(e.target.closest('[data-stk]')) setTab('stock')});
-$('hStats').addEventListener('click',function(e){
-  var b=e.target.closest('[data-hgo]'); if(!b) return;
-  var k=b.dataset.hgo;
-  if(k==='stock'){setTab('stock');return}
-  filtro=(k==='atrasados')?'atrasados':(k==='saldo')?'saldo':'todos';
-  query='';$('buscar').value='';
-  setTab('pedidos');renderOrders();
-});
-function closeSheets(){['dlgQuick','dlgMore'].forEach(function(id){var d=$(id);if(d&&d.open) d.close()})}
-function quickAction(k){
-  closeSheets();
-  if(k==='pedido'){setTab('pedidos');openDialog()}
-  else if(k==='presupuesto'){setTab('pedidos');openBudget()}
-  else if(k==='compra'){setTab('compras');openCompra()}
-  else if(k==='impresion'){setTab('calc');setTimeout(function(){$('filamentos').scrollIntoView({behavior:'smooth',block:'center'})},60);toast('Elegí la bobina de cada color y tocá "Registrar impresión"')}
-  else if(k==='cobrar'){filtro='saldo';query='';$('buscar').value='';setTab('pedidos');renderOrders()}
-}
-document.addEventListener('click',function(e){
-  var q=e.target.closest('[data-quick]'); if(q){quickAction(q.dataset.quick);return}
-  var g=e.target.closest('[data-go]'); if(g){closeSheets();setTab(g.dataset.go);return}
-  var c=e.target.closest('[data-close]'); if(c){var d=$(c.dataset.close);if(d) d.close();return}
-  var n=e.target.closest('#bnav [data-bn]');
-  if(n){
-    var k=n.dataset.bn;
-    if(k==='plus') $('dlgQuick').showModal();
-    else if(k==='mas') $('dlgMore').showModal();
-    else setTab(k);
-  }
-});
-['dlgQuick','dlgMore'].forEach(function(id){
-  $(id).addEventListener('click',function(e){if(e.target===this) this.close()});
-});
 
 /* ---------- pedidos ---------- */
 orders.forEach(function(o){
@@ -2031,6 +1949,10 @@ function buildCatalogHtml(items,cfg){
     'background:linear-gradient(135deg,var(--btn-a),var(--btn-b));display:grid;place-items:center;font-size:26px;'+
     'text-decoration:none;box-shadow:0 10px 26px rgba(183,33,255,.5)}'+
     'footer{text-align:center;color:var(--muted);font-size:12px;margin-top:52px;padding-top:20px;border-top:1px solid var(--line)}'+
+    '.media img{cursor:zoom-in}'+
+    '.lb{position:fixed;inset:0;background:rgba(5,7,12,.94);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;cursor:zoom-out}'+
+    '.lb.on{display:flex}'+
+    '.lb img{max-width:100%;max-height:90vh;border-radius:14px;object-fit:contain;box-shadow:0 20px 50px rgba(0,0,0,.6)}'+
     '@media(prefers-reduced-motion:no-preference){'+
     '@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}'+
     'header{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}'+
@@ -2041,7 +1963,13 @@ function buildCatalogHtml(items,cfg){
     (cfg.bajada?'<p class="bajada">'+esc(cfg.bajada)+'</p>':'')+'</header>'+
     '<div class="grid">'+cards+'</div>'+
     '<footer>Actualizado el '+fecha+'</footer>'+
-    '</div>'+fab+'</body></html>';
+    '</div>'+fab+
+    '<div class="lb" id="lb" aria-hidden="true"><img alt="" id="lbImg"></div>'+
+    '<script>(function(){var lb=document.getElementById("lb"),li=document.getElementById("lbImg");'+
+    'document.querySelectorAll(".media img").forEach(function(im){im.addEventListener("click",function(){li.src=im.src;li.alt=im.alt;lb.classList.add("on");lb.setAttribute("aria-hidden","false")})});'+
+    'lb.addEventListener("click",function(){lb.classList.remove("on");lb.setAttribute("aria-hidden","true")});'+
+    'document.addEventListener("keydown",function(e){if(e.key==="Escape")lb.classList.remove("on")});})();<\/script>'+
+    '</body></html>';
 }
 $('btnGenCatalogo').addEventListener('click',function(){
   if(!catCfg.titulo.trim()){toast('Ponele un título al catálogo');$('cat_titulo').focus();return}
@@ -2271,7 +2199,7 @@ var fbAuth=null, fbDb=null, fbUser=null, fbUnsubs=[];
 var snapInfo={pedidos:{cache:true,pending:false},compras:{cache:true,pending:false}};
 var COL={
   pedidos:{get:function(){return orders},set:function(a){orders=a},key:K_ORD,ready:false,last:{},
-    after:function(){renderOrders();renderClients();renderResumen();renderInicio()}},
+    after:function(){renderOrders();renderClients();renderResumen()}},
   compras:{get:function(){return compras},set:function(a){compras=a},key:K_GAST,ready:false,last:{},
     after:function(){renderCompras();renderResumen()}}
 };
@@ -2372,7 +2300,7 @@ function listenCfg(){
     if(snap.metadata.hasPendingWrites) return;
     if(!snap.exists){ if(!snap.metadata.fromCache&&bobinas.length) pushBobinas(); return }
     var d=snap.data(); bobinas=Array.isArray(d.items)?d.items:[];
-    lsSet(K_STOCK,bobinas); renderStock(); fillBobinaPicker(); renderInicio();
+    lsSet(K_STOCK,bobinas); renderStock(); fillBobinaPicker();
   },syncErr));
   u.push(cfgDoc('clientesinfo').onSnapshot(function(snap){
     if(snap.metadata.hasPendingWrites) return;
@@ -2451,7 +2379,7 @@ function initSync(){
 
 /* ---------- inicio ---------- */
 initSync();
-bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();renderStock();fillBobinaPicker();bindCatCfg();renderInicio();setTab('inicio');
+bindCalc();calcUpdate();renderOrders();renderClients();renderCompras();renderResumen();renderPiezas();fillPiezaPicker();renderStock();fillBobinaPicker();bindCatCfg();
 var deferredInstall=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;$('btnInstall').hidden=false});
 $('btnInstall').addEventListener('click',function(){
