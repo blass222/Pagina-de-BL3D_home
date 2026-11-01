@@ -27,21 +27,6 @@ Se usa Firebase, de Google. El plan gratuito (Spark) alcanza de sobra para este 
 
 Los valores de `firebase-config.js` no son secretos, aunque el repositorio sea público. La seguridad la dan las reglas del paso 4 y tu contraseña.
 
-## Nuevo: pantalla de Inicio y barra de navegación en el celular
-
-- **Inicio** es ahora la primera pantalla. Muestra pedidos atrasados, entregas de los próximos 7 días, saldo por cobrar y bobinas con poco stock. Cada tarjeta es un atajo: tocás una y te lleva a los pedidos (o al stock) ya filtrados.
-- Abajo ves las próximas entregas (tocás una para abrir ese pedido) y las bobinas que conviene reponer. Botones rápidos: Nuevo pedido, Cobrar saldos y Registrar impresión.
-- **En el celular** las pestañas de arriba se reemplazan por una barra inferior: Inicio, Pedidos, **Agregar** (nuevo pedido, presupuesto, compra, impresión o cobrar saldos), Stock y Más (Clientes, Compras, Resumen, Calculadora, Catálogo).
-- En la compu todo sigue con las pestañas de arriba, con Inicio como primera.
-
-## Rediseño: el catálogo ahora tiene identidad propia
-
-- Fondo oscuro fijo (no cambia con el modo claro/oscuro del celular) con el degradé celeste-violeta del logo.
-- El logo y el ícono de la pestaña ahora van incrustados dentro del propio `catalogo.html`: no dependen de que subas `icon-192.png` al mismo lugar, así que no se rompen si lo subís a otro repositorio o carpeta.
-- Cada precio aparece como una etiqueta colgante inclinada sobre la foto, estilo cartel de feria.
-- Botón flotante de WhatsApp fijo, además del botón por cada pieza, para consultas generales.
-- Una animación sutil de entrada al abrir la página (una sola vez, no en cada acción).
-
 ## Nuevo: Catálogo para compartir con clientes
 
 - Pestaña **Catálogo**, nueva. Ahí elegís qué piezas de las que guardaste en la Calculadora mostrar, les ponés foto y una descripción para el cliente (distinta del nombre interno), y configurás el título, la bajada y tu WhatsApp.
