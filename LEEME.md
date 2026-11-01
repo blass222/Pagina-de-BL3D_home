@@ -10,6 +10,13 @@
 
 Si no configurás Firebase, la app funciona igual pero cada dispositivo guarda sus propios datos.
 
+## Nuevo: Panel de Inicio, barra móvil, Calculadora avanzada y vista previa del Catálogo
+
+- **Pestaña Inicio (Dashboard):** resumen rápido al abrir la app con 4 indicadores (pedidos atrasados, entregas en los próximos 7 días, saldo por cobrar y bobinas con stock bajo), botones de acceso rápido, alertas de entregas y filamento, balance del mes actual y copia de seguridad en un toque.
+- **Navegación renovada:** en computadora las pestañas muestran ícono + texto con contadores de alerta en vivo; en celulares aparece una barra inferior fija con acceso rápido y menú **"Más"**.
+- **Calculadora con comisiones, impuestos y envío:** ahora podés elegir moneda (`ARS`, `USD`, `EUR`), sumar **% de comisión de venta** (MercadoLibre, tienda online, Posnet), **% de impuestos estimados**, **costo de envío a tu cargo**, redondear el precio final a $100 o $1.000, y ver destacada tu **ganancia neta real** (en monto y porcentaje sobre el precio final).
+- **Vista previa en vivo del Catálogo:** en la pestaña Catálogo ves al costado (o abajo en celular) cómo va quedando la página pública con tus piezas, fotos, precios y botón de WhatsApp en tiempo real antes de descargar `catalogo.html`.
+
 ## Activar la sincronización (celular y compu ven lo mismo)
 
 Se usa Firebase, de Google. El plan gratuito (Spark) alcanza de sobra para este uso.
